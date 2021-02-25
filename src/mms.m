@@ -1,6 +1,6 @@
 % create manufactured solution
 clear x z;
-syms U_mms(x,z) W_mms(x,z) P_mms(x,z) u_mms(x,z) w_mms(x,z) p_mms(x,z) f_mms(x,z)
+syms U_mms(x,z) W_mms(x,z) P_mms(x,z) u_mms(x,z) w_mms(x,z) p_mms(x,z) T_mms(x,z) C_mms(x,z) f_mms(x,z)
 
 fprintf(1,'  ***  compose manufactured solution\n\n');
 
@@ -8,11 +8,15 @@ fprintf(1,'  ***  compose manufactured solution\n\n');
 W_mms(x,z) =   0.50.*(cos(4*(x-z)*pi/L).*sin(2*(x+z)*pi/L));
 U_mms(x,z) =   0.25.*(sin(4*(x-z)*pi/L).*cos(2*(x+z)*pi/L));
 P_mms(x,z) =   1.00.*(cos(4*(x-z)*pi/L).*cos(2*(x+z)*pi/L));
-f_mms(x,z) = 1+0.25.*(sin(4*(x-z)*pi/L).*sin(2*(x+z)*pi/L));
+T_mms(x,z) = 0.40-0.01.*(sin(4*(x-z)*pi/L).*sin(2*(x+z)*pi/L));  T0 = 0.40;
+C_mms(x,z) = 0.20+0.04.*(sin(4*(x-z)*pi/L).*sin(2*(x+z)*pi/L));  C0 = 0.20;
+f_mms(x,z) = 0.05+0.01.*(sin(4*(x-z)*pi/L).*sin(2*(x+z)*pi/L));  f0 = 0.05;
 
 fprintf(1,'       W = %s \n',char(W_mms));
 fprintf(1,'       U = %s \n',char(U_mms));
 fprintf(1,'       P = %s \n',char(P_mms));
+fprintf(1,'       T = %s \n',char(T_mms));
+fprintf(1,'       C = %s \n',char(C_mms));
 fprintf(1,'       f = %s \n',char(f_mms));
 fprintf(1,'       . ');
 
@@ -24,9 +28,9 @@ fprintf(1,' . ');
 
 % update coefficients
  eps_mms(x,z) = sqrt(1/2*(exx_mms.^2 + ezz_mms.^2 + 2*exz_mms.^2));
- eta_mms(x,z) = exp(-lmd*f0.*(f_mms-1)) .* (eps_mms./(abs(Pu)+abs(Si))).^((1-n)./n);
-zeta_mms(x,z) = eta_mms ./ (f0.*f_mms);
-K_mms(x,z)    = f_mms.^m;
+ eta_mms(x,z) = exp(Es*(1./T_mms-1./T0) - lmd.*(f_mms-f0));
+zeta_mms(x,z) = eta_mms./f_mms;
+K_mms(x,z)    = (f_mms/f0).^m .* exp(-Ef*(1./T_mms-1./T0));
 fprintf(1,' . ');
 
 % update stresses
@@ -50,15 +54,21 @@ fprintf(1,' . ');
 % plot manufactured solution
 figure(15);
 colormap(ocean);
-subplot(2,4,1); fcontour( -W_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $W$','Interpreter','latex');
-subplot(2,4,2); fcontour(  U_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $U$','Interpreter','latex');
-subplot(2,4,3); fcontour(  P_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $P$','Interpreter','latex');
-subplot(2,4,4); fcontour(  f_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $f$','Interpreter','latex');
+subplot(4,3, 1); fcontour(  -W_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $W$','Interpreter','latex');
+subplot(4,3, 2); fcontour(   U_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $U$','Interpreter','latex');
+subplot(4,3, 3); fcontour(   P_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $P$','Interpreter','latex');
 fprintf(1,' . ');
-subplot(2,4,5); fcontour( -w_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $w$','Interpreter','latex');
-subplot(2,4,6); fcontour(  u_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $u$','Interpreter','latex');
-subplot(2,4,7); fcontour(  p_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $p$','Interpreter','latex');
-subplot(2,4,8); fcontour(eta_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $\eta$','Interpreter','latex');
+subplot(4,3, 4); fcontour(   T_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $T$','Interpreter','latex');
+subplot(4,3, 5); fcontour(   C_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $C$','Interpreter','latex');
+subplot(4,3, 6); fcontour(   f_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $f$','Interpreter','latex');
+fprintf(1,' . ');
+subplot(4,3, 7); fcontour(  -w_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $w$','Interpreter','latex');
+subplot(4,3, 8); fcontour(   u_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $u$','Interpreter','latex');
+subplot(4,3, 9); fcontour(   p_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $p$','Interpreter','latex');
+fprintf(1,' . ');
+subplot(4,3,10); fcontour( eta_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $\eta$','Interpreter','latex');
+subplot(4,3,11); fcontour(zeta_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $\zeta$','Interpreter','latex');
+subplot(4,3,12); fcontour(   K_mms,[-L/2,L/2]); axis ij equal tight; colorbar; box on; title('manufactured $K$','Interpreter','latex');
 drawnow;
 fprintf(1,' . \n');
 
@@ -97,6 +107,8 @@ W_mms = double(subs(W_mms)); fprintf(1,' . ');
 U_mms = double(subs(U_mms)); fprintf(1,' . ');
 [x,z] = meshgrid(x_mms,z_mms);
 P_mms = double(subs(P_mms)); fprintf(1,' . ');
+T_mms = double(subs(T_mms)); fprintf(1,' . ');
+C_mms = double(subs(C_mms)); fprintf(1,' . ');
 f_mms = double(subs(f_mms)); fprintf(1,' . \n');
 
 M = 1;  % only initial step for benchmarking
