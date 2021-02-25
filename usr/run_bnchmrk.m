@@ -25,27 +25,40 @@ for ii = 1:length(NN)
     M        =  1;                   % number of time steps to take
     tend     =  1;                   % end time for simulation [s]
     
-    % set model liquid fraction parameters
-    f0       =  0.04;                % background liquid fraction
-    f1       =  0.25;                % amplitude of random noise
-    f2       =  0.00;                % amplitude of gaussian
+    % set model rheology parameters
+    m        =  3;                   % permeability powerlaw
+    n        =  1;                   % non-Newtonian shear viscosity powerlaw
+    lmd      =  30;                  % shear viscosity liquid-weakening parameter
+    Es       =  0;                   % matrix viscosity activation energy
+    Ef       =  0;                   % melt viscosity activation energy
+    
+    % stress control parameters
+    Pu       =  0;                   % ratio of pure-shear stress to buoyancy pressure
+    Si       =  1;                   % ratio of simple-shear stress to buoyancy pressure
+    B        =  1;                   % ratio of buoyancy pressure to tensile strength
+    
+    % thermo-chemical model parameters
+    T0       =  0.40;                % initial temperature
+    T1       =  0.00;                % amplitude of random noise
+    T2       =  0.0;                 % amplitude of gaussian
+    PeT      =  1.0;                 % thermal Peclet number [u0.h0/kappaT0]
+    St       =  1.0;                 % Stefan number [cp0.dT0/L0]
+    C0       =  0.20;                % initial composition
+    C1       =  0.00;                % amplitude of random noise
+    C2       =  0.0;                 % amplitude of gaussian
+    PeC      =  1;                   % chemical Peclet number [u0.h0/Dc0]
+    Da       =  1e3;                 % Dahmköhler number [t0/tr0]
+    PhDg     =  3.0;                 % Phase diagram scaling factor (> 1)
+    perCf    =  0.8;                 % peritectic liquidus composition
+    perCs    =  0.7;                 % peritectic solidus  composition
+    perT     =  0.3;                 % peritectic temperature
     smx      =  (N/50)^2;            % smoothness of initial random noise in x-direction
     smz      =  (N/50)^2;            % smoothness of initial random noise in z-direction
     wx       =  L/5;                 % horizontal half-width of gaussian
     wz       =  L/5;                 % vertical half-width of initial gaussian
     xpos     =  0;                   % x-position of initial gaussian (0 = middle of domain)
     zpos     =  0;                   % z-position of initial gaussian (0 = middle of domain)
-    
-    % set model rheology parameters
-    m        =  3;                   % permeability powerlaw
-    n        =  1;                   % non-Newtonian shear viscosity powerlaw
-    lmd      =  30;                  % shear viscosity liquid-weakening parameter
-    
-    % stress control parameters
-    Pu       =  0;                   % ratio of pure-shear stress to buoyancy pressure
-    Si       =  1;                   % ratio of simple-shear stress to buoyancy pressure
-    B        =  1;                   % ratio of buoyancy force to
-    
+
     % set numerical model parameters
     nup      =  10;                  % nonlinear coefficients, residual norms updated every 'nup' iterations
     CFL      =  1.00;                % (physical) time stepping courant number (multiplies stable step) [0,1]
