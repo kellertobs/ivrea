@@ -7,8 +7,12 @@ load ocean;
 ic  =  2:N-1 ;
 ip  =  2:N   ;
 im  =  1:N-1 ;
-ibz = [2 N-1];  % boundary indices for closed boundary condition
-ibx = [N-1 2];  % boundary indices for periodic boundary condition
+ibz = [2 N-1];  % boundary indices for closed top/bot boundaries
+if abs(Si)>abs(Pu)
+    ibx = [N-1 2];  % boundary indices for periodic side boundaries
+else
+    ibx = [2 N-1];  % boundary indices for closed side boundaries
+end
 
 % produce smooth random perturbations
 rng(5);
@@ -19,12 +23,12 @@ for i = 1:max(smx,smz)
               + smx./max(smx,smz).*diff(dr(ic,:),2,2)./8;
     dr = dr - mean(dr(:)); 
     dr = dr./max(abs(dr(:)));
-    dr([1 end],:) = dr([end-1 2],:);
-    dr(:,[1 end]) = dr(:,[end-1 2]);
+    dr([1 end],:) = 0;
+    dr(:,[1 end]) = 0;
 end
 
 % get coordinate arrays
-z     = -L/2-h/2:h:L/2+h/2;
+z     = -0  -h/2:h:L  +h/2;
 x     = -L/2-h/2:h:L/2+h/2;
 xc    = (x(im)+x(ip))./2;
 zc    = (z(im)+z(ip))./2;
@@ -36,10 +40,10 @@ gs   = exp(-(X+xpos).^2./wx^2).*exp(-(Z+zpos).^2./wz^2);
 
 % initialise background velocity fields
 Pu  = Pu+1e-16;  Si = Si+1e-16;
-WP  =  (Z(im,:)+Z(ip,:))/2/L*Pu*L;  % pure   shear WBG
-WS  = -(X(im,:)+X(ip,:))/2/L*Si*L;  % simple shear WBG
-UP  = -(X(:,im)+X(:,ip))/2/L*Pu*L;  % pure   shear UBG
-US  = -(Z(:,im)+Z(:,ip))/2/L*Si*L;  % simple shear UBG
+WP  =    (Z(im,:)+Z(ip,:))/2 *Pu;  % pure   shear WBG
+WS  =   -(X(im,:)+X(ip,:))/2 *Si;  % simple shear WBG
+UP  =   -(X(:,im)+X(:,ip))/2 *Pu;  % pure   shear UBG
+US  = (L-(Z(:,im)+Z(:,ip))/2)*Si;  % simple shear UBG
 WS  = 0.*WS; US = 2.*US; 
 WBG = WP+WS;
 UBG = UP+US;     
@@ -52,19 +56,29 @@ if bnchmrk
     T   = T_mms;
     MAJ = C_mms;
 else
-    T         =  Tc-(T0-Tc).*erf((-Z-L/2)./D).*(1 + T1.*dr + T2.*gs); Tin = T;
+    T         =  Tc-(T0-Tc).*erf((-Z)./D).*(1 + T1.*dr + T2.*gs); Tin = T;
     MAJ       =  MAJ0 .* (1 + MAJ1.*dr + MAJ2.*gs); MAJin = MAJ;
+    TRI       =  TRI0 .* (1 + TRI1.*dr + TRI2.*gs); TRIin = TRI;
     TRC       =  TRC0 .* (1 + TRC1.*dr + TRC2.*gs); TRCin = TRC;
-    SIS       =  SIS0 .* (1 + SIS1.*dr + SIS2.*gs); SISin = SIS;
-    [f,MAJs,MAJf] =  equilibrium(T ,MAJ ,perT,perCs,perCf,PhDg);  fin = f;
+    ISS       =  ISS0 .* (1 + ISS1.*dr + ISS2.*gs); ISSin = ISS;
+    ISF       =  ISF0 .* (1 + ISF1.*dr + ISF2.*gs); ISFin = ISF;
+    [f,MAJsq,MAJfq] =  equilibrium(T ,MAJ ,perT,perCs,perCf,PhDg);  fin = f;
     f0        =  equilibrium(T0,MAJ0,perT,perCs,perCf,PhDg);
 end
 fprintf('\n\n*****  initial condition: T0 = %1.3f;  C0 = %1.3f;  f0 = %1.3f;\n\n',T0,MAJ0,f0);
+% update phase major element composition
+KMAJ = MAJsq./MAJfq;
+MAJf = MAJ./(f + (1-f).*KMAJ);
+MAJs = MAJ./(f./KMAJ + (1-f));
+MAJf(f<=  1e-3) = MAJfq(f<=1e-3);  MAJs(f<=  1e-3) = MAJ(f<=    1e-3);
+MAJf(f>=1-1e-3) = MAJ(f>=1-1e-3);  MAJs(f>=1-1e-3) = MAJsq(f>=1-1e-3);
 res_f   = 0.*f; df = 0.*f; Lpl_f = 0.*f;
 res_T   = 0.*T; dT = 0.*T;
 res_MAJ = 0.*MAJ; dMAJ = 0.*MAJ;
+res_TRI = 0.*TRI;
 res_TRC = 0.*TRC;
-res_SIS = 0.*SIS;
+res_ISS = 0.*ISS;
+res_ISF = 0.*ISF;
 
 % initialise mechanical solution and residual fields
 W     =  0.*WBG;  res_W = 0.*W;  dW = 0.*W;
@@ -75,11 +89,14 @@ w     =  0.*W;    wf = W+w./((f(im,:)+f(ip,:))./2);
 p     =  0.*P;
 
 % initialise parameter fields
-V_GrdT    =  0.*T;    Lpl_T = 0.*T;
-Div_fMAJV =  0.*MAJ;  Lpl_MAJ = 0.*MAJ;
-Div_fTRCV =  0.*TRC;  Lpl_TRC = 0.*TRC;
-Div_fSISV =  0.*SIS;  Lpl_SIS = 0.*SIS;
-RctR_f    =  0.*f;    RctR_fo = RctR_f;
+V_GrdT    =  0.*T;    Lpl_T    = 0.*T;
+Div_fMAJV =  0.*MAJ;  Lpl_MAJ  = 0.*MAJ;
+Div_fTRIV =  0.*TRI;  Lpl_TRI  = 0.*TRI;
+Div_fTRCV =  0.*TRC;  Lpl_TRC  = 0.*TRC;
+Div_fISSV =  0.*ISS;  Lpl_ISS  = 0.*ISS;
+Div_fISFV =  0.*ISF;  Lpl_ISF  = 0.*ISF;
+RctR_f    =  0.*f;    RctR_fo  = RctR_f; 
+ISR   =  0.*ISS;  ISRo = ISR;
 ups       =  0.*P;  upss = 0.*P;  Div_fV = 0.*P;  Div_fVBG = 0.*P;
 eps0      =  max(B/L,abs(Pu) + abs(Si)) + 1e-16;  
 exx       =  0.*P - Pu;  ezz = 0.*P + Pu;  exz = zeros(N-1,N-1) - Si;  eps = 0.*P + (abs(Pu) + abs(Si));  
@@ -131,9 +148,11 @@ while time < tend && step < M
     % store previous solution
     To   = T;   V_GrdTo    = V_GrdT;    Lpl_To   = Lpl_T;
     MAJo = MAJ; Div_fMAJVo = Div_fMAJV; Lpl_MAJo = Lpl_MAJ;
+    TRIo = TRI; Div_fTRIVo = Div_fTRIV; Lpl_TRIo = Lpl_TRI;
     TRCo = TRC; Div_fTRCVo = Div_fTRCV; Lpl_TRCo = Lpl_TRC;
-    SISo = SIS; Div_fSISVo = Div_fSISV; Lpl_SISo = Lpl_SIS;
-    fo   = f;   Div_fVo    = Div_fV;    Lpl_fo   = Lpl_f;    RctR_fo = RctR_f;
+    ISSo = ISS; Div_fISSVo = Div_fISSV; Lpl_ISSo = Lpl_ISS;  ISRo = ISR;
+    ISFo = ISF; Div_fISFVo = Div_fISFV; Lpl_ISFo = Lpl_ISF;
+    fo   = f;   Div_fVo    = Div_fV;    Lpl_fo   = Lpl_f;    RctR_fo  = RctR_f;
     dto   = dt;
     
     % reset residual norms and iteration count
@@ -147,7 +166,8 @@ while time < tend && step < M
     dPi = 0.*P;
     
     % non-linear iteration loop
-    while resnorm/resnorm0 >= rtol && resnorm >= atol && it <= maxit || it <= minit
+    first = 2*double(step==0) + double(step>0);
+    while resnorm/resnorm0 >= rtol/first && resnorm >= atol && it <= maxit*first || it <= minit
                 
         % store previous iterative solution guess  
         Wi = W;
@@ -159,125 +179,27 @@ while time < tend && step < M
             
             up2date;
             
-            Div_fV(ic,ic) = flxdiv(1-f,U+UBG,W+WBG,h,'flx');               % phase advection/compaction
-
-            if step > 0
-                
-            % update melt fraction
-            Lpl_f(ic,ic)  = (diff(f(:,ic),2,1)./h^2 ...
-                          +  diff(f(ic,:),2,2)./h^2);                      % diffusion
-                      
-            RbndF  = 0;%max(0,-(f-fin)/5/dt .* exp(-(( Z)-L/2).^2./(L/20)^2)) ...
-                   %+ min(0, (f-fin)/5/dt .* exp(-((-Z)-L/2).^2./(L/20)^2));
+            thermochem;
             
-            res_f = (f-fo)./dt - (  theta .*(Div_fV  + Lpl_f /PeC + RctR_f ) ...
-                               + (1-theta).*(Div_fVo + Lpl_fo/PeC + RctR_fo) ...
-                               + RbndF);                                   % residual phase evolution equation
-                           
-            df = -res_f.*dt/8;
-            
-            df([1 end],:)  = 0;                                        % apply boundary conditions
-            df(:,[1 end])  = df(:,ibx);
-                    
-            f = f + alpha*df;                                           % update phase solution
-            f = max(1e-16,min(1-1e-16,f));
-            f([1 end],:) = fq([1 end],:);
-            
-            % update temperature
-            V_GrdT(ic,ic) = flxdiv(T,U+u+UBG,W+w+WBG,h,'adv');             % advection
-            
-            Lpl_T(ic,ic)  = (diff(T(:,ic),2,1)./h^2 ...
-                          +  diff(T(ic,:),2,2)./h^2);                      % diffusion
-                                
-            RbndT  = 0;%max(0,-(T-Tin)/5/dt .* exp(-(( Z)-L/2).^2./(L/20)^2)) ...
-                   %+ min(0,-(T-Tin)/5/dt .* exp(-((-Z)-L/2).^2./(L/20)^2));
-                
-            res_T = (T-To)./dt - (  theta .*(-V_GrdT  + Lpl_T /PeT - RctR_f /St) ...
-                               + (1-theta).*(-V_GrdTo + Lpl_To/PeT - RctR_fo/St) ...
-                               + RbndT);                                   % residual temperature evolution equation
-            
-            dT = -res_T.*dt/8;
-            
-            dT([1 end],:)  = dT(ibz,:);                                % apply boundary conditions
-            dT(:,[1 end])  = dT(:,ibx);
-                             
-            T = T + alpha*dT;                                           % update temperature solution
-            
-            % update major element composition
-            Div_fMAJV(ic,ic) = flxdiv((1-f).*MAJs,U +UBG,W +WBG,h,'flx') ...
-                             + flxdiv(   f .*MAJf,uf+UBG,wf+WBG,h,'flx');  % advection/compaction
-            
-            Lpl_MAJ(ic,ic)  = (diff(MAJ(:,ic),2,1)./h^2 ...
-                            +  diff(MAJ(ic,:),2,2)./h^2);                  % diffusion
-
-            RbndMAJ = 0;%max(0,-(MAJ-MAJin)/5/dt .* exp(-(( Z)-L/2).^2./(L/20)^2)) ...
-                    %+ min(0,-(MAJ-MAJin)/5/dt .* exp(-((-Z)-L/2).^2./(L/20)^2));
-
-            res_MAJ = (MAJ-MAJo)./dt - (  theta .*(-Div_fMAJV  + Lpl_MAJ /PeC) ...
-                                     + (1-theta).*(-Div_fMAJVo + Lpl_MAJo/PeC) ...
-                                     + RbndMAJ);                           % residual composition evolution equation
-            
-            dMAJ = -res_MAJ.*dt/8;
-            
-            dMAJ([1 end],:)  = dMAJ(ibz,:);                                % apply boundary conditions
-            dMAJ(:,[1 end])  = dMAJ(:,ibx);
-                        
-            MAJ = MAJ + alpha*dMAJ;                                     % update composition solution
-            MAJ = max(1e-16,min(1-1e-16,MAJ));
-
-            % update trace element composition
-            Div_fTRCV(ic,ic) = flxdiv((1-f).*TRCs,U +UBG,W +WBG,h,'flx') ...
-                             + flxdiv(   f .*TRCf,uf+UBG,wf+WBG,h,'flx');  % advection/compaction
-            
-            Lpl_TRC(ic,ic)  = (diff(TRC(:,ic),2,1)./h^2 ...
-                            +  diff(TRC(ic,:),2,2)./h^2);                  % diffusion
-                        
-            RbndTRC = 0;%max(0,-(TRC-TRCin)/5/dt .* exp(-(( Z)-L/2).^2./(L/20)^2)) ...
-                    %+ min(0,-(TRC-TRCin)/5/dt .* exp(-((-Z)-L/2).^2./(L/20)^2));
-            
-            res_TRC = (TRC-TRCo)./dt - (  theta .*(-Div_fTRCV  + Lpl_TRC /PeC) ...
-                                     + (1-theta).*(-Div_fTRCVo + Lpl_TRCo/PeC) ...
-                                     + RbndTRC);                           % residual composition evolution equation
-            
-            res_TRC([1 end],:) = res_TRC(ibz,:);                           % apply boundary conditions
-            res_TRC(:,[1 end]) = res_TRC(:,ibx);
-                        
-            TRC = TRC - res_TRC.*dt/8;                                     % update composition solution
-            
-            % update stable isotope composition
-            Div_fSISV(ic,ic) = flxdiv((1-f).*SIS,U +UBG,W +WBG,h,'flx') ...
-                             + flxdiv(   f .*SIS,uf+UBG,wf+WBG,h,'flx');   % advection/compaction
-            
-            Lpl_SIS(ic,ic)  = (diff(SIS(:,ic),2,1)./h^2 ...
-                            +  diff(SIS(ic,:),2,2)./h^2);                  % diffusion
-                        
-            RbndSIS = 0;%max(0,-(SIS-SISin)/5/dt .* exp(-(( Z)-L/2).^2./(L/20)^2)) ...
-                    %+ min(0,-(SIS-SISin)/5/dt .* exp(-((-Z)-L/2).^2./(L/20)^2));
-            
-            res_SIS = (SIS-SISo)./dt - (  theta .*(-Div_fSISV  + Lpl_SIS /PeC) ...
-                                     + (1-theta).*(-Div_fSISVo + Lpl_SISo/PeC) ...
-                                     + RbndSIS);                           % residual composition evolution equation
-            
-            res_SIS([1 end],:) = res_SIS(ibz,:);                           % apply boundary conditions
-            res_SIS(:,[1 end]) = res_SIS(:,ibx);
-                        
-            SIS = SIS - res_SIS.*dt/8;                                     % update composition solution
-            end
         end
         
         % update segregation velocities and compaction pressure
-        w   = -(K(im,:)+K(ip,:)).*0.5 .* (diff(P,1,1)./h + B);             % segregation z-velocity
+        w   = -10.^((K(im,:)+K(ip,:)).*0.5) .* (diff(P,1,1)./h + B);       % segregation z-velocity
         
         w(:,[1 end]) = w(:,ibx);
                 
-        u   = -(K(:,im)+K(:,ip)).*0.5 .* (diff(P,1,2)./h);                 % segregation x-velocity
+        u   = -10.^((K(:,im)+K(:,ip)).*0.5) .* (diff(P,1,2)./h);           % segregation x-velocity
         
-        u([1 end],:) = u(ibz,:);                                       % apply boundary conditions
-        u(:,[1 end]) = [sum(u(:,[1 end]),2)./2, ...
-                        sum(u(:,[1 end]),2)./2];
+        u([1 end],:) = u(ibz,:);                                           % apply boundary conditions
+        if abs(Si) > abs(Pu)
+            u(:,[1 end]) = [sum(u(:,[1 end]),2)./2, ...
+                            sum(u(:,[1 end]),2)./2];
+        else
+            u(:,[1 end]) = 0;
+        end
                 
-        uf = U+u./((f(:,im)+f(:,ip))./2);                                  % get fluid x-velocity      
-        wf = W+w./((f(im,:)+f(ip,:))./2);                                  % get fluid z-velocity
+        uf = U+u./max(flim,(f(:,im)+f(:,ip))./2);                          % get fluid x-velocity      
+        wf = W+w./max(flim,(f(im,:)+f(ip,:))./2);                          % get fluid z-velocity
             
         p  = -10.^zeta .* ups;                                             % compaction pressure
         
@@ -302,7 +224,8 @@ while time < tend && step < M
         Div_tz = diff(tzz(:,ic),1,1)./h + diff(txz,1,2)./h;                % z-stress divergence
         
         res_W(:,ic) = - Div_tz + diff(P(:,ic),1,1)./h ...                  % residual z-momentum equation
-                               + diff(p(:,ic),1,1)./h; % - ((f(im,ic)+f(ip,ic))./2-f0).*B;
+                               + diff(p(:,ic),1,1)./h ... 
+                               + ((f(im,ic)+f(ip,ic))./2-f0).*B;
                                 
         if bnchmrk; res_W = res_W - src_W_mms; end
         
@@ -324,9 +247,14 @@ while time < tend && step < M
         dU = -res_U.*dtU;
         
         dU([1 end],:) = dU(ibz,:);                                         % apply boundary conditions
-        dU(:,[1 end]) = [sum(dU(:,[1 end]),2)./2, ...
-                         sum(dU(:,[1 end]),2)./2];
+        if abs(Si) > abs(Pu)
+            dU(:,[1 end]) = [sum(dU(:,[1 end]),2)./2, ...
+                             sum(dU(:,[1 end]),2)./2];
+        else
+            dU(:,[1 end]) = 0;
 
+        end
+        
         dU = dU-mean(dU(:));                                               % remove mean from update
         
         U = Ui + alpha*dU + beta*dUi;                                      % update x-velocity solution
@@ -352,9 +280,6 @@ while time < tend && step < M
         dP([1 end],:) = 0;                                                 % apply boundary conditions
         dP(:,[1 end]) = dP(:,ibx);
         
-        dP([1 end],:) = 0;                                             % apply boundary conditions
-        dP(:,[1 end]) = dP(:,ibx);
-        
         dP = dP-mean(dP(:));                                               % remove mean from update
             
         P = Pi + alpha*dP + beta*dPi;                                      % update pressure solution
@@ -362,7 +287,7 @@ while time < tend && step < M
         dPi = P - Pi;
         
         % check and report convergence every max(100,nup) iterations
-        if ~mod(it,max(100,nup)); report; end
+        if it>0 && ~mod(it,max(100,nup)); report; end
         
         it = it+1;
 

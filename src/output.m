@@ -85,8 +85,8 @@ ax(5) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
 ax(6) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
 
 set(fh2, 'CurrentAxes', ax(1))
-imagesc(xc,zc,max(-3,log10(  K(ic,ic)))); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Darcy coefficient $K$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
+imagesc(xc,zc,max(-3, K(ic,ic))); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ Darcy coefficient $K$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
 text(0,0.9*L,['time ',num2str(time,4)],TX{:},FS{:},'HorizontalAlignment','center','VerticalAlignment','middle')
 set(fh2, 'CurrentAxes', ax(2))
 imagesc(xc,zc,      ups(ic,ic) ); axis ij equal tight; box on; cb = colorbar;
@@ -107,18 +107,21 @@ drawnow;
 
 % prepare and plot figure for thermo-chemical solution fields
 fh3 = figure; colormap(ocean);
-fh = axb + 2*axh + 1*avs + axt;
+fh = axb + 3*axh + 2*avs + axt;
 fw = axl + 3*axw + 2*ahs + axr;
 set(fh3,UN{:},'Position',[12 12 fw fh]);
 set(fh3,'PaperUnits','Centimeters','PaperPosition',[0 0 fw fh],'PaperSize',[fw fh]);
 set(fh3,'Color','w','InvertHardcopy','off');
 set(fh3,'Resize','off');
-ax(1) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+1*axh+1*avs axw axh]);
-ax(2) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+1*axh+1*avs axw axh]);
-ax(3) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+1*axh+1*avs axw axh]);
-ax(4) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+0*axh+0*avs axw axh]);
-ax(5) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
-ax(6) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
+ax(1) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+2*axh+2*avs axw axh]);
+ax(2) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+2*axh+2*avs axw axh]);
+ax(3) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+2*axh+2*avs axw axh]);
+ax(4) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+1*axh+1*avs axw axh]);
+ax(5) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+1*axh+1*avs axw axh]);
+ax(6) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+1*axh+1*avs axw axh]);
+ax(7) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+0*axh+0*avs axw axh]);
+ax(8) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
+ax(9) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
 
 set(fh3, 'CurrentAxes', ax(1))
 imagesc(xc,zc,T(ic,ic)); axis ij equal tight; box on; cb = colorbar;
@@ -132,13 +135,23 @@ imagesc(xc,zc,(RctR_f(ic,ic)+RctR_fo(ic,ic))/2); axis ij equal tight; box on; cb
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melting Rate $\Gamma$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
 set(fh3, 'CurrentAxes', ax(4))
 imagesc(xc,zc,MAJ(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Major element $C_\mathrm{maj}$'],TX{:},FS{:});
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Temperature $T$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
+text(0,0.9*L,['time ',num2str(time,4)],TX{:},FS{:},'HorizontalAlignment','center','VerticalAlignment','middle')
 set(fh3, 'CurrentAxes', ax(5))
-imagesc(xc,zc,TRC(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Trace element $C_\mathrm{trc}$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
+imagesc(xc,zc,TRI(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melt fraction $\phi$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
 set(fh3, 'CurrentAxes', ax(6))
-imagesc(xc,zc,SIS(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Stable isotope $C_\mathrm{sis}$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
+imagesc(xc,zc,TRC(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melting Rate $\Gamma$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
+set(fh3, 'CurrentAxes', ax(7))
+imagesc(xc,zc,ISS(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Solid stable isotope $C_\mathrm{iss}$'],TX{:},FS{:});
+set(fh3, 'CurrentAxes', ax(8))
+imagesc(xc,zc,ISF(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Fluid stable isotope $C_\mathrm{isf}$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
+set(fh3, 'CurrentAxes', ax(9))
+imagesc(xc,zc,0.*TRC(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['place holder'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
 drawnow;
 
 % prepare and plot figure for solution residuals
@@ -188,13 +201,13 @@ if plot_cv
         imagesc(xc,zc,( dP./(1e-16+norm(P(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. pore pressure $P$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
         set(fh4, 'CurrentAxes', ax(4))
-        imagesc(xc,zc,( dT./(1e-16+norm(T(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        imagesc(xc,zc,( res_T*(dt/10)./(1e-16+norm(T(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. temperature $T$'],TX{:},FS{:});
         set(fh4, 'CurrentAxes', ax(5))
-        imagesc(xc,zc,( dMAJ./(1e-16+norm(MAJ(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        imagesc(xc,zc,( res_MAJ*(dt/10)./(1e-16+norm(MAJ(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. composition $C$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
         set(fh4, 'CurrentAxes', ax(6))
-        imagesc(xc,zc,( df./(1e-16+norm(f(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        imagesc(xc,zc,( res_f*(dt/10)./(1e-16+norm(f(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. liquid fraction $\phi$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
         drawnow;
     end
