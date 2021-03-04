@@ -1,0 +1,214 @@
+
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage[margin=5pt,font=small,labelfont=bf]{caption}
+\usepackage{graphicx,amsmath,amssymb,natbib,setspace,lineno,xspace,color}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
+\usepackage[colorlinks=true,breaklinks=true,linkcolor=darkblue,urlcolor=darkblue,
+            anchorcolor=darkblue,citecolor=darkblue]{hyperref}
+\input{defs}
+
+\title{Melt ascent and differentiation from the upper mantle to the lower crust} 
+\author{Tobias Keller}
+
+\begin{document}
+\maketitle \linenumbers \doublespace
+
+\section{Introduction}
+Porous flow of liquid and/or gas phases through deforming granular solids is an ubiquitous process in natural and engineering systems. In the geosciences, the process applies to the transport of silicate melts and aqueous fluids through the shallow mantle and crust, to the percolation of water and hydrocarbons through variably consolidated sediment stacks, and to water flow through polycrystalline ice in alpine glaciers and polar ice sheets. Understanding the characteristic rates and spatial patterns pertaining to these processes requires knowledge of the non-linear interactions between the segregation of the pore fluid and the shear and de/compaction deformation of the solid matrix. In particular, these systems are known to be prone to localisation of flow and deformation into narrow channels and bands.
+
+%\begin{figure}[htb]
+%  \centering
+%  \includegraphics[width=0.6\textwidth]{../figs/Fig1.pdf}
+%  \caption{Fig. 1}
+%  \label{fig:1}
+%\end{figure}
+
+
+\section{Method}
+
+\subsection{Physical model}
+
+The porous segregation of melt is modelled as an incompressible, viscous fluid, percolating through a permeable and deformable matrix, of incompressible, visco-plastic solid. The two-phase system is subject to decompaction failure. The non-dimensionalised (two-dimensional, plane-strain) governing equations expressing conservation of mass and momentum in the two-phase mixture are,
+\begin{linenomath*}
+\begin{subequations}
+\label{eq:governing}
+\begin{align}
+	\label{eq:moment-mixture}
+	\Grad P &= - \Grad p + \Div \underline{\boldsymbol{\tau}}  \ , \\
+	\label{eq:mass-mixture}
+	\Div \mathbf{V} &= \Div \vel \ ,
+%	\label{eq:liquid-evo}
+%	\dfrac{D_b \phi}{D t} &= \Div (\mathrm{F}-\phi) \mathbf{V}  \ ,
+\end{align}
+\end{subequations}
+\end{linenomath*}
+where $\mathbf{V} = [U,W]$ is the dynamic velocity, and $P$ the dynamic pressure of the mixture, $\vel = [u,w]$ the segregation velocity of the pore fluid, $p$ the compaction pressure, and $\underline{\boldsymbol{\tau}} = [\tau_{xx},\tau_{zz},\tau_{xz}]$ the shear stress tensor of the solid matrix. The dimensionless number $\mathrm{F}$ is introduced below. $\nabla = [\partial/\partial x,\partial/\partial z]$ is the partial spatial derivative, and $D_b/Dt = \partial/\partial t + \mathbf{V}_b \cdot \Grad$ the Lagrangian time derivative in the reference frame of the background flow field (see next paragraph). All variables and parameters are functions of position, $\mathbf{x} = [x,z]$, and time, $t$, unless indicated otherwise by a subscript nought. The depth coordinate $z$ points in the direction of gravity. We have assumed that buoyancy-driven creep of the matrix is negligible compared to stress-driven shear and compaction flow. The model is purely mechanical and neglects thermo-chemical evolution and phase-change reactions.
+
+The mixture velocity and pressure are each reduced by subtracting an invariant background field with constant spatial gradients. The dynamic pressure, $P$, is the Stokes pressure of the mixture reduced by a lithostatic background field, $P_b$, with $\Grad P_\mathrm{lith} = [0,\rho_{s,0} g_0]$, where $\rho_{s,0}$ is the constant solid matrix density, and $g_0$ the gravity constant. The dynamic velocity is the Stokes velocity of the mixture reduced by a background flow field, $\mathbf{V}_b$, with $\Grad \mathbf{V}_b = [-\mathrm{Pu}, \mathrm{Pu}, -\mathrm{Si}] \ \mathrm{s}^{-1}$, where $\mathrm{Pu}$ and $\mathrm{Si}$ are dimensionless factors by which the relative magnitudes of pure- and simple-shear background flows will be adjusted. Positive and negative values of $\mathrm{Pu}$ induce compressional and extensional pure shear, respectively, while simple shear follows a dextral shear sense along the $x$-coordinate and a sinistral sense along the $z$-coordinate for positive values of $\mathrm{Si}$, and vice versa.
+
+The non-dimensionalised closures for  segregation velocity, $\vel$, compaction pressure, $p$, shear-stress tensor, $\underline{\boldsymbol{\tau}}$, and visco-plastic matrix rheology are,
+\begin{linenomath*}
+\begin{subequations}
+\label{eq:nondim-coeffs}
+\begin{align}
+	\label{eq:nondim-coeffs-segr}
+	\vel &= -\phi^m \left( \Grad P + \mathrm{B} \hat{\mathbf{z}} \right) \ , \\
+	\label{eq:nondim-coeffs-cpct}
+	p &= -\dfrac{\mathrm{F} \eta}{\phi} \Div \mathbf{V} \ , \\
+	\label{eq:nondim-coeffs-stress}
+	\underline{\boldsymbol{\tau}} &= \eta \, \underline{\dot{\boldsymbol{\varepsilon}}} \ , \\
+	\label{eq:nondim-coeffs-viscoplast}
+	\eta &= \min\left( \exp \left(-\dfrac{\lambda} {\mathrm{F}} (\phi-1) \right) \left(\dfrac{\dot{\varepsilon}}{\dot{\varepsilon}_b} \right)^{-n} \: , \:\: \dfrac{\tau_y}{\dot{\varepsilon}} + \eta_\mathrm{min} \right) \ , \\
+	\label{eq:nondim-coeffs-yield}
+	\tau_y &= 1 + p \ .
+\end{align}
+\end{subequations}
+\end{linenomath*}
+$\hat{\mathbf{z}}$ is the unit vector pointing along the depth coordinate. The shear strain rate tensor, $\underline{\dot{\boldsymbol{\varepsilon}}}$, its components, and magnitude are defined as,
+\begin{linenomath*}
+\begin{subequations}
+\label{eq:nondim-strainr}
+\begin{align}
+	\label{eq:nondim-strainr-comps}
+	\underline{\dot{\boldsymbol{\varepsilon}}} &= [\dot{\varepsilon}_{xx},\dot{\varepsilon}_{zz},\dot{\varepsilon}_{xz}] \ , \\
+	\label{eq:nondim-strainr-compxx}
+	\dot{\varepsilon}_{xx} &= \dfrac{2}{3} \dfrac{\partial U}{\partial x} - \dfrac{1}{3} \dfrac{\partial W}{\partial z} - \mathrm{Pu} \ , \\
+	\label{eq:nondim-strainr-compzz}
+	\dot{\varepsilon}_{zz} &= \dfrac{2}{3} \dfrac{\partial W}{\partial z} - \dfrac{1}{3} \dfrac{\partial U}{\partial x} + \mathrm{Pu} \ , \\
+	\label{eq:nondim-strainr-compxz}
+	\dot{\varepsilon}_{xz} &= \dfrac{1}{2} \left( \dfrac{\partial U}{\partial z} + \dfrac{\partial W}{\partial x} \right) - \mathrm{Si} \ , \\
+	\label{eq:nondim-strainr-magn}
+	\dot{\varepsilon} &= \sqrt{\dfrac{1}{2} \left(\dot{\varepsilon}_{xx} + \dot{\varepsilon}_{zz} + 2 \dot{\varepsilon}_{xz} \right)} \ . 
+\end{align}
+\end{subequations}
+\end{linenomath*}
+The dimensionless number $\mathrm{F} = \phi_0^{-1}$ expresses the compaction to shear viscosity ratio, i.e., the inverse of the characteristic porosity. The matrix creep viscosity is weakened exponentially by pore fluid with a factor $\lambda=30$, and is softened by the strain rate magnitude, $\dot{\varepsilon}$ with a non-Newtonian powerlaw exponent $n=2/3$. The reference strain-rate for the non-Newtonian powerlaw is determined by the applied pure- and/or simple-shear background deformation, $\varepsilon_b = |\mathrm{Pu}| + |\mathrm{Si}|$. Hence, the shear viscosity at $\phi = 1$ and $\varepsilon = \varepsilon_b$ is equal to unity, and the compaction viscosity equal to $\mathrm{F}$. The visco-plastic matrix rheology is implemented using an effective-viscosity approach limiting shear stress as a function of compaction pressure not to exceed the tensile failure criterion, $\tau_y$ (see Fig. \ref{fig:yield}). A minimum yield viscosity, $\eta_min$, is added to regularise the problem by imposing a minimum length scale of localised failure zones.
+
+To highlight the role of decompaction failure, we have scaled pressures and stresses by the tensile strength of the matrix, $p_o = \sigma_{T,0}$. The dimensionless number $\mathrm{B} = \Delta \rho_0 g_0 \delta_0 / \sigma_{T,0}$ expresses the relative magnitude of the buoyancy-related phase pressure difference relative to the tensile strength scale. The former is a natural scale of the Stokes-Darcy problem proportional to $\Delta \rho_0$, the matrix-fluid density difference. Velocities are scaled by the Darcy speed scale $w_0 = K_0 p_0/\ell_0$, and length by $\ell_0 = \sqrt{\eta_0 K_0}$, a natural scale of the problem related to the segregation-compaction length, $\delta_0 =  \sqrt{F} \ell_0$, where $\eta_0$ is the characteristic matrix shear viscosity, and $K_0$ the Darcy coefficient scale, $K_0 = a_0^2 \phi_0^m / (b_0 \mu_0)$, with $a_0$ the characteristic matrix grain size, $b_0 = 100$ a geometrical constant, and $\mu_0$ the characteristic fluid viscosity.
+
+\subsection{Numerical Implementation}
+
+The model domain is a two-dimensional square of 100$\times$100 non-dimensional size. The initial condition on porosity is a smoothed random noise. The boundary conditions are periodic for all solution variables. Note that dynamic velocity and pressure can be periodic even when the background velocity and pressure fields are non-periodic. Where the advection of $\phi$ on the background flow field requires information from outside the domain boundary an algorithm feeds in random perturbations with properties similar to the initial perturbation field.
+
+The numerical implementation discretises the governing equations on a regular square grid of 500$\times$500 finite-volume cells using a standard staggered-grid finite-difference scheme. Advection terms are implemented using a flux-conservative, upwind-biased Fromm method. The equations are solved using a damped Richardson iterative scheme. For reasons of numerical stability the shear visco-plasticity, $\eta$, is regularised by applying a small amount of Laplacian smoothing. 
+%TO DO: The numerical algorithm was benchmarked against a manufactured analytical solution and shows second order error convergence with increasing resolution. 
+The simulation code was developed and tested in Matlab version R2020a and is openly available in on github.com/kellertobs/defail.
+
+
+\section{Results}
+We test the model sensitivity to changes in the buoyancy number, $\mathrm{B}$, the  pure and simple shear numbers, $\mathrm{Pu}$, and $\mathrm{Si}$, and the compaction-to-shear viscosity ratio, $\mathrm{F}$. As a guide, low $\mathrm{B}$ corresponds to shear-dominated flows, while high $\mathrm{B}$ represents buoyancy-dominated systems; $\mathrm{Pu}$ or $\mathrm{Si}$ smaller than unity means shear stresses effected by applied background deformation are lower than the tensile strength, and vice versa; higher values of $\mathrm{F}$ correspond to lower background pore fluid fraction and higher compaction-to-shear viscosity ratio.
+
+We begin by examining a set of three reference simulations at $\mathrm{F} = 50$, $\mathrm{B} = 1$, and $\mathrm{Pu} = -1$, $\mathrm{Pu} = 1$, and $\mathrm{Si} = 1$, respectively (while holding the other deformation number at nought). Effects of shear- versus buoyancy-dominated fluid percolation are expected to be of similar importance, while stress states are expected to be near the failure point. The compaction-to-shear viscosity ratio corresponds to 2 vol\% fluid fraction. Figure xxx shows the state of 
+
+\section{Discussion}
+
+\section{Conclusions}
+
+%\bibliographystyle{abbrvnat}
+%\bibliography{notes}
+
+%\appendix
+%\section{Governing equations}
+%\begin{linenomath*}
+%\begin{subequations}
+%\label{eq:governing}
+%\begin{align}
+%	\label{eq:moment-mixture}
+%	\Grad P &= -\Grad P_\Delta + \Div \underline{\boldsymbol{\tau}}  \ , \\
+%	\label{eq:mass-mixture}
+%	\Div \vel &= - \Div \vel_\Delta \ , \\
+%	\label{eq:liquid-evo}
+%	\dfrac{\partial \phi}{\partial t} &= \Div (1-\phi) \vel \ . 
+%\end{align}
+%\end{subequations}
+%\end{linenomath*}
+%The variables are the solid velocity, $\vel = \vel^s$, acting as reference for the segregation velocity of the liquid, $\vel_\Delta = \phi (\vel^\ell - \vel^s)$, the dynamic (non-lithostatic) liquid pressure, $P = P^\ell - \rho^s g$, acting as reference for the compaction pressure, $P_\Delta = (1-\phi)(P^s-P^\ell)$, where $\phi$ is the volume fraction of the liquid phase in the saturated phase mixture, and superscripts $s$ and $\ell$ denote properties of the solid and liquid phases, respectively. $\underline{\boldsymbol{\tau}}$ is the shear stress tensor of the mixture. Buoyancy forces in the momentum equation \eqref{eq:moment-mixture} are of order $\phi \ll 1$ and are therefore assumed to be negligible here.
+%
+%\subsection{Constitutive relations}
+%The governing equations \eqref{eq:governing} require constitutive relations for the segregation velocity, compaction pressure, and shear stress,
+%\begin{linenomath*}
+%\begin{subequations}
+%\label{eq:constitutive}
+%\begin{align}
+%	\label{eq:constitutive-segr}
+%	\vel_\Delta &= - K \left( \Grad P + \Delta \rho \gvec \right) \ , \\
+%	\label{eq:constitutive-comp}
+%	P_\Delta &= - \zeta \, \Div \vel \ , \\
+%	\label{eq:constitutive-stress}
+%	\underline{\boldsymbol{\tau}} &= \eta \, \underline{\mathbf{D}} \ .
+%\end{align}
+%\end{subequations}
+%\end{linenomath*}
+%The material parameters are the phase density difference, $\Delta \rho = \rho^s - \rho^\ell$, the segregation coefficient, $K$, and the effective shear and compaction viscosities, $\eta$ and $\zeta$. $\underline{\mathbf{D}} = \dfrac{1}{2} (\Grad \vel + [\Grad \vel]^T) - \dfrac{1}{3} \Div \vel \I$ is the deviatoric symmetrical velocity gradient or shear strain-rate tensor.
+%
+%The Darcy segregation coefficient is,
+%\begin{linenomath*}
+%\begin{align}
+%	\label{eq:coeff-segr}
+%	K =  \dfrac{a_0 \phi^n}{b \mu_0} , 
+%\end{align}
+%\end{linenomath*}
+%with $a_0$ the characteristic grain size of the matrix [m], $b$ a dimensionless geometric factor of order $\sim 100$, $n$ the permeability powerlaw coefficient, and $\mu_0$ the liquid viscosity, which we hold constant here.
+%
+%\subsection{Non-dimensional governing equations}
+%To non-dimensionalise the governing equations \eqref{eq:governing} including their constitutive relations \eqref{eq:constitutive}, we introduce characterstic scales for pressure and stress $[P,P_\Delta,\underline{\boldsymbol{\tau}},\tau_\mathrm{y}] = p_0$, velocity, $[\vel,\vel_\Delta] = w_0$, liquid fraction $[\phi] = \phi_0$, length $\delta_0$ to scale spatial derivatives, $[\Grad] = 1/\delta_0$, time $[t] = \delta_0/w_0$, viscosities $[\eta] = \eta_0$, and $[\zeta] = \eta_0/\phi_0$, Darcy coefficient, $[K] = k_0 \phi_0^m / \mu_0$, density difference $[\Delta \rho] = \Delta \rho_0 = \rho^s_0 - \rho^\ell_0$, and gravity, $[\mathbf{g}] = g_0$.
+%
+%Upon inspection the following emerge as the characteristic speed, pressure, and length scales of the problem, 
+%\begin{linenomath*}
+%\begin{subequations}
+%\label{eq:scales}
+%\begin{align}
+%	\label{eq:scales-pressure}
+%	p_0 &= \Delta \rho_0 g_0 \delta_0 \ , \\
+%	\label{eq:scales-speed}
+%	w_0 &= \dfrac{K_0 p_0}{\delta_0} \ , \\
+%	\label{eq:scales-length}
+%	\delta_0 &= \sqrt{\eta_0 K_0} \ .
+%\end{align}
+%\end{subequations}
+%\end{linenomath*}
+%
+%\subsection{Visco-elastic rheology with decompaction failure}
+%The deformation of a granular solid at the microscopic, granular scale is a superposition of the internal deformation of individual grains and the cohesive-frictional interactions between adjacent grains. We model the effective macroscopic deformation as viscous creep subject to tensile plastic failure. The former is dominated by fluid-like deformation at strain rates proportional to the stress applied. We assume that the contribution of solid-like elastic strain is negligible in the relatively ductile porous media we are interested in. Plastic failure occurs when the stress state locally reaches the yield stress. At this point, the material will continue deforming at increased strain rates while stress remains limited; hence, the effective deformational strength of the material is reduced, and deformation tends to become strongly localised.
+%
+%Here we employ a simplified representation of the Griffith-Murrell failure criterion as a tensile cutoff. The criterion only admits stress states whos Moh-Coulomb circle with radius of shear stress magnitude, $|\boldsymbol{\tau}|$, and origin of effective mean normal stress, $\langle \sigma_\mathrm{eff} \rangle$, is bounded to the left by the tensile strength, $-\sigma_T$. The shear stress magnitude is related to the second norm of the stress tensor, $|\boldsymbol{\tau}|$
+%It gives the maximum permitted shear stress magnitude as a function of the effective confining stress, which is the mean or isotropic stress magnitude reduced by the pore fluid pressure. Hence, if the pore fluid has a pressure similar to the mean stress in the granular matrix, the effective pressure, $P_\Delta$ in our notation, will be near zero. It will be negative where the liquid becomes overpressured.
+%
+%We write the tensile failure criterion as,
+%\begin{linenomath*}
+%\begin{align}
+%  \label{eq:failure-criterion}
+%  |\underline{\boldsymbol{\tau}}| \leq \tau_\mathrm{y} = \sigma_T + P_\Delta \ .
+%\end{align}
+%\end{linenomath*}
+%where the yield strength, $\tau_\mathrm{y}$, sets the maximum shear stress magnitude, $|\underline{\boldsymbol{\tau}}|$, with tensor magnitude defined as $ | \underline{(\cdot)} | = \sqrt{\frac{1}{2} \underline{(\cdot)} : \underline{(\cdot)}}$, as a function of the tensile rock strength, $\sigma_T$, and the effective pressure, $P_\Delta$.
+%
+%We impose the failure criterion by choosing an effective yield viscosity that enforces the stress limit,
+%\begin{linenomath*}
+%\begin{align}
+%	\label{eq:strainr-magnitude}
+%	\eta_\mathrm{y} = \min\left( \eta_\mathrm{v} \: , \:\: \dfrac{\tau_\mathrm{y}}{|\underline{\mathbf{D}}|} \right) \ ,
+%\end{align}
+%\end{linenomath*}
+%where the shear viscosity of the porous medium follows a  liquid- and strain-rate weakened closure,
+%\begin{linenomath*}
+%\begin{align}
+%	\label{eq:visc-shear}
+%	\eta_\mathrm{v} &= \eta_0 \exp(\lambda (\phi-\phi_0)) \left(|\underline{\mathbf{D}}| / \varepsilon_0 \right)^{-n}  \ .
+%\end{align}
+%\end{linenomath*}
+%$\eta_0$ is the reference viscosity set at the reference liquid fraction, $\phi_0$, and the reference strain rate magnitude, $\varepsilon_0$, $27 \leq \lambda \leq 30$ an exponential liquid-weakening factor, $0 \leq n \leq 0.75$ the strain-rate weakening powerlaw exponent, and $|\underline{\mathbf{D}}|$ the magnitude of the shear strain-rate tensor.
+%
+%We follow a similar procedure to choose constitutive relation for compaction pressure above \eqref{eq:constitutive}, with the compaction visco-plasticity a taken as the shear visco-plasticity divided by the porosity,
+%\begin{linenomath*}
+%\begin{subequations}
+%\begin{align}
+%	 \label{eq:visc-elast-cmpeffvisc}
+%	 \zeta &= \dfrac{\eta}{\phi}  \ .
+%\end{align}
+%\end{subequations}
+%\end{linenomath*}
+%Hence, compaction deformation is equally subject to melt- and strain-rate weakening, as well as decompaction failure.
+
+\end{document}
