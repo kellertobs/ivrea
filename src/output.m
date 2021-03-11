@@ -15,7 +15,7 @@ axl = 1.75; axr = 0.90;
 set(0,'DefaultFigureVisible',plot_op)
 
 % prepare and plot figure for mechanical solution fields
-fh1 = figure(1); colormap(ocean);
+fh1 = figure(1); clf; colormap(ocean);
 fh = axb + 2*axh + 1*avs + axt;
 fw = axl + 3*axw + 2*ahs + axr;
 set(fh1,UN{:},'Position',[3 3 fw fh]);
@@ -51,7 +51,7 @@ set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['comp. pressure $p$'],TX{:},FS
 drawnow;
 
 % prepare and plot figure for material properties
-fh2 = figure(2); colormap(ocean);
+fh2 = figure(2); clf; colormap(ocean);
 fh = axb + 2*axh + 1*avs + axt;
 fw = axl + 3*axw + 2*ahs + axr;
 set(fh2,UN{:},'Position',[6 6 fw fh]);
@@ -87,7 +87,7 @@ set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ shear stress $\tau
 drawnow;
 
 % prepare and plot figure for thermo-chemical solution fields
-fh3 = figure(3); colormap(ocean);
+fh3 = figure(3); clf; colormap(ocean);
 fh = axb + 2*axh + 1*avs + axt;
 fw = axl + 3*axw + 2*ahs + axr;
 set(fh3,UN{:},'Position',[9 9 fw fh]);
@@ -124,7 +124,7 @@ drawnow;
 
 
 % prepare and plot figure for thermo-chemical solution fields
-fh4 = figure(4); colormap(ocean);
+fh4 = figure(4); clf; colormap(ocean);
 fh = axb + 2*axh + 1*avs + axt;
 fw = axl + 2*axw + 1*ahs + axr;
 set(fh4,UN{:},'Position',[12 12 fw fh]);
@@ -154,7 +154,7 @@ drawnow;
 
 % prepare and plot figure for solution residuals
 if plot_cv
-    fh5 = figure(5); colormap(ocean);
+    fh5 = figure(5); clf; colormap(ocean);
     fh = axb + 2*axh + 1*avs + axt;
     fw = axl + 3*axw + 2*ahs + axr;
     set(fh5,UN{:},'Position',[15 15 fw fh]);
