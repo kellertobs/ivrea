@@ -3,8 +3,7 @@ resnormi = resnorm;
 % get residual norm
 resnorm = norm(dU(:),2)./(1e-16+norm(W(:)+WBG(:),2)) ...
         + norm(dW(:),2)./(1e-16+norm(W(:)+WBG(:),2)) ...
-        + norm(dP(:),2)./(1e-16+norm(P(:),2)) ...
-        + norm(df(:),2)./(1e-16+norm(f(:),2));
+        + norm(dP(:),2)./(1e-16+norm(P(:),2));
 
 if it<=max(100,nup) || resnorm>resnorm0; resnorm0 = resnorm + 1e-32; end  % reset reference residual
  

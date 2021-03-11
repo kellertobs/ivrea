@@ -56,62 +56,68 @@ if bnchmrk
     T   = T_mms;
     MAJ = C_mms;
 else
-    T         =  Tc-(T0-Tc).*erf((-Z)./D).*(1 + T1.*dr + T2.*gs); Tin = T;
-    MAJ       =  MAJ0 .* (1 + MAJ1.*dr + MAJ2.*gs); MAJin = MAJ;
-    TRI       =  TRI0 .* (1 + TRI1.*dr + TRI2.*gs); TRIin = TRI;
-    TRC       =  TRC0 .* (1 + TRC1.*dr + TRC2.*gs); TRCin = TRC;
-    ISS       =  ISS0 .* (1 + ISS1.*dr + ISS2.*gs); ISSin = ISS;
-    ISF       =  ISF0 .* (1 + ISF1.*dr + ISF2.*gs); ISFin = ISF;
-    [f,MAJsq,MAJfq] =  equilibrium(T ,MAJ ,perT,perCs,perCf,PhDg);  fin = f;
-    f0        =  equilibrium(T0,MAJ0,perT,perCs,perCf,PhDg);
+    T   =  Tc-(T0-Tc).*erf((-Z)./D).*(1 + T1.*dr + T2.*gs); Tin = T;       % temperature
+    MAJ =  MAJ0 .* (1 + MAJ1.*dr + MAJ2.*gs); MAJin = MAJ;                 % major elements
+    [f,MAJsq,MAJfq] =  equilibrium(T ,MAJ ,perT,perCs,perCf,PhDg); fin = f;% melt fraction at equilibrium 
+    f0  =  equilibrium(T0,MAJ0,perT,perCs,perCf,PhDg);                     % melt fraction at T0, MAJ0
 end
 fprintf('\n\n*****  initial condition: T0 = %1.3f;  C0 = %1.3f;  f0 = %1.3f;\n\n',T0,MAJ0,f0);
+
+% initialise geochemical signature
+TRI  =  TRI0 .* (1 + TRI1.*dr + TRI2.*gs); TRIin = TRI;  % incompatible traces
+TRC  =  TRC0 .* (1 + TRC1.*dr + TRC2.*gs); TRCin = TRC;  % compatible traces
+IRP  =  IRP0 .* (1 + IRP1.*dr + IRP2.*gs); IRPin = IRP;  % radiogenic parent isotopes
+IRD  =  IRD0 .* (1 + IRD1.*dr + IRD2.*gs); IRDin = IRD;  % radiogenic daughter isotopes
+ISS  =  ISS0 .* (1 + ISS1.*dr + ISS2.*gs); ISSin = ISS;  % solid stable isotopes
+ISF  =  ISF0 .* (1 + ISF1.*dr + ISF2.*gs); ISFin = ISF;  % fluid stable isotopes
+    
 % update phase major element composition
 KMAJ = MAJsq./MAJfq;
 MAJf = MAJ./(f + (1-f).*KMAJ);
 MAJs = MAJ./(f./KMAJ + (1-f));
 MAJf(f<=  1e-3) = MAJfq(f<=1e-3);  MAJs(f<=  1e-3) = MAJ(f<=    1e-3);
 MAJf(f>=1-1e-3) = MAJ(f>=1-1e-3);  MAJs(f>=1-1e-3) = MAJsq(f>=1-1e-3);
-res_f   = 0.*f; df = 0.*f; Lpl_f = 0.*f;
-res_T   = 0.*T; dT = 0.*T;
-res_MAJ = 0.*MAJ; dMAJ = 0.*MAJ;
-res_TRI = 0.*TRI;
-res_TRC = 0.*TRC;
-res_ISS = 0.*ISS;
-res_ISF = 0.*ISF;
+res_f   = 0.*f;
+res_T   = 0.*T;
+res_MAJ = 0.*MAJ;
 
 % initialise mechanical solution and residual fields
-W     =  0.*WBG;  res_W = 0.*W;  dW = 0.*W;
-U     =  0.*UBG;  res_U = 0.*U;  dU = 0.*U;
-P     =  0.*f;    res_P = 0.*P;  dP = 0.*P;
-u     =  0.*U;    uf = U+u./((f(:,im)+f(:,ip))./2);
-w     =  0.*W;    wf = W+w./((f(im,:)+f(ip,:))./2);
-p     =  0.*P;
+W      =  0.*WBG;  res_W = 0.*W;  dW = 0.*W;
+U      =  0.*UBG;  res_U = 0.*U;  dU = 0.*U;
+P      =  0.*f;    res_P = 0.*P;  dP = 0.*P;
+u      =  0.*U;    uf = U+u./((f(:,im)+f(:,ip))./2);
+w      =  0.*W;    wf = W+w./((f(im,:)+f(ip,:))./2);
+p      =  0.*P;
+Pt     =  Pc + P + p + 5*B*Z;
+DMG    =  0.1*(1+dr./10);  res_DMG = 0.*DMG;
 
 % initialise parameter fields
-V_GrdT    =  0.*T;    Lpl_T    = 0.*T;
-Div_fMAJV =  0.*MAJ;  Lpl_MAJ  = 0.*MAJ;
-Div_fTRIV =  0.*TRI;  Lpl_TRI  = 0.*TRI;
-Div_fTRCV =  0.*TRC;  Lpl_TRC  = 0.*TRC;
-Div_fISSV =  0.*ISS;  Lpl_ISS  = 0.*ISS;
-Div_fISFV =  0.*ISF;  Lpl_ISF  = 0.*ISF;
-RctR_f    =  0.*f;    RctR_fo  = RctR_f; 
-ISR   =  0.*ISS;  ISRo = ISR;
-ups       =  0.*P;  upss = 0.*P;  Div_fV = 0.*P;  Div_fVBG = 0.*P;
-eps0      =  max(B/L,abs(Pu) + abs(Si)) + 1e-16;  
-exx       =  0.*P - Pu;  ezz = 0.*P + Pu;  exz = zeros(N-1,N-1) - Si;  eps = 0.*P + (abs(Pu) + abs(Si));  
-txx       =  0.*exx;  tzz = 0.*ezz;  txz = 0.*exz;  tau = 0.*eps;
-eta       =  exp(Es*(1./T-1./T0)) .* (1-(f-f0)./0.3).^8;
-eta       =  (1./etamax + 1./eta ).^-1 + etamin;
-eta       =  log10( eta );
-zeta      =  eta - max(-6,log10(f));
-yieldt    =  ones(size(P));
-rctr      =  ones(size(MAJ));
+RctR_f =  0.*f;
+Rf     =  0.*f;
+RT     =  0.*T;
+RMAJ   =  0.*MAJ;
+RTRI   =  0.*TRI;
+RTRC   =  0.*TRC;
+RIRP   =  0.*IRP;
+RIRD   =  0.*IRD;
+RISS   =  0.*ISS;
+RISF   =  0.*ISF;
+RDMG   =  0.*DMG;
+ISR    =  ISS;
+ups    =  0.*P;  upss = 0.*P;  Div_fV = 0.*P;
+eps0   =  max(B/L,abs(Pu) + abs(Si)) + 1e-16;  
+exx    =  0.*P - Pu;  ezz = 0.*P + Pu;  exz = zeros(N-1,N-1) - Si;  eps = 0.*P + (abs(Pu) + abs(Si));  
+txx    =  0.*exx;  tzz = 0.*ezz;  txz = 0.*exz;  tau = 0.*eps;
+eta    =  0.*P;
+zeta   =  eta - log10(f0);
+K      =  log10((f/f0).^3);
+yieldt =  ones(size(P));
+rctr   =  ones(size(MAJ));
 
 % initialise timing parameters
-step  =  0;
-time  =  0;
-dt    =  1e-16;
+step   =  0;
+time   =  0;
+dt     =  1e-16;
 
 % print initial condition
 if ~restart; up2date; output; end
@@ -146,14 +152,17 @@ while time < tend && step < M
     tic;
     
     % store previous solution
-    To   = T;   V_GrdTo    = V_GrdT;    Lpl_To   = Lpl_T;
-    MAJo = MAJ; Div_fMAJVo = Div_fMAJV; Lpl_MAJo = Lpl_MAJ;
-    TRIo = TRI; Div_fTRIVo = Div_fTRIV; Lpl_TRIo = Lpl_TRI;
-    TRCo = TRC; Div_fTRCVo = Div_fTRCV; Lpl_TRCo = Lpl_TRC;
-    ISSo = ISS; Div_fISSVo = Div_fISSV; Lpl_ISSo = Lpl_ISS;  ISRo = ISR;
-    ISFo = ISF; Div_fISFVo = Div_fISFV; Lpl_ISFo = Lpl_ISF;
-    fo   = f;   Div_fVo    = Div_fV;    Lpl_fo   = Lpl_f;    RctR_fo  = RctR_f;
-    dto   = dt;
+    fo   = f;    Rfo   = Rf;
+    To   = T;    RTo   = RT;
+    MAJo = MAJ;  RMAJo = RMAJ;
+    TRIo = TRI;  RTRIo = RTRI;
+    TRCo = TRC;  RTRCo = RTRC;
+    IRPo = IRP;  RIRPo = RIRP;
+    IRDo = IRD;  RIRDo = RIRD;
+    ISSo = ISS;  RISSo = RISS;
+    ISFo = ISF;  RISFo = RISF;
+    DMGo = DMG;  RDMGo = RDMG;
+    dto  = dt;
     
     % reset residual norms and iteration count
     resnorm  = 1e3;
@@ -165,6 +174,7 @@ while time < tend && step < M
     dUi = 0.*U;
     dPi = 0.*P;
     
+    
     % non-linear iteration loop
     first = 2*double(step==0) + double(step>0);
     while resnorm/resnorm0 >= rtol/first && resnorm >= atol && it <= maxit*first || it <= minit
@@ -174,14 +184,13 @@ while time < tend && step < M
         Ui = U;
         Pi = P;
         
-        % update thermo-chemical evolution
+        
+        % update rheology, coefficient, thermo-chemical evolution
         if ~mod(it,nup)
-            
             up2date;
-            
             thermochem;
-            
         end
+        
         
         % update segregation velocities and compaction pressure
         w   = -10.^((K(im,:)+K(ip,:)).*0.5) .* (diff(P,1,1)./h + B);       % segregation z-velocity
@@ -202,10 +211,13 @@ while time < tend && step < M
         wf = W+w./max(flim,(f(im,:)+f(ip,:))./2);                          % get fluid z-velocity
             
         p  = -10.^zeta .* ups;                                             % compaction pressure
-        
+                
         p([1 end],:) = 0;                                                  % apply boundary conditions
         p(:,[1 end]) = p(:,ibx);
-                
+
+        Pt  = Pc + P + p + 5*B*Z;                                          % total aggregate pressure
+        
+        
         % update strain rates
         exx(:,ic)   = diff(U,1,2)./h - ups(:,ic)./3 - Pu;                  % x-normal strain rate
         exx([1 end],:)   = exx(ibz,:);                                     % apply boundary conditions
@@ -219,6 +231,7 @@ while time < tend && step < M
         txx = 10.^eta .* exx;                                              % x-normal stress
         tzz = 10.^eta .* ezz;                                              % z-normal stress
         txz = 10.^etac.* exz;                                              % xz-shear stress  
+        
         
         % update z-reference velocity
         Div_tz = diff(tzz(:,ic),1,1)./h + diff(txz,1,2)./h;                % z-stress divergence
@@ -235,7 +248,8 @@ while time < tend && step < M
         
         W = Wi + alpha*dW + beta*dWi;                                      % update z-velocity solution
 
-        dWi = W - Wi;
+        dWi = W - Wi;                                                      % store update step
+        
         
         % update x-reference velocity        
         Div_tx  = diff(txx(ic,:),1,2)./h + diff(txz,1,1)./h;               % x-stress divergence
@@ -259,8 +273,9 @@ while time < tend && step < M
         
         U = Ui + alpha*dU + beta*dUi;                                      % update x-velocity solution
       
-        dUi = U - Ui;
+        dUi = U - Ui;                                                      % store update step
 
+        
         % update velocity divergences
         ups(ic,ic) = diff(U(ic,:),1,2)./h + diff(W(:,ic),1,1)./h;          % matrix velocity divergence
                              
@@ -270,6 +285,7 @@ while time < tend && step < M
         upss(ic,ic) = diff(u(ic,:),1,2)./h + diff(w(:,ic),1,1)./h;         % segregation velocity divergence
         upss([1 end],:) = upss(ibz,:);                                     % apply boundary conditions    
         upss(:,[1 end]) = upss(:,ibx);          
+        
         
         % update reference pressure
         res_P = ups + upss;                                                % residual mass equation
@@ -284,7 +300,7 @@ while time < tend && step < M
             
         P = Pi + alpha*dP + beta*dPi;                                      % update pressure solution
 
-        dPi = P - Pi;
+        dPi = P - Pi;                                                      % store update step
         
         % check and report convergence every max(100,nup) iterations
         if it>0 && ~mod(it,max(100,nup)); report; end
@@ -292,9 +308,6 @@ while time < tend && step < M
         it = it+1;
 
     end
-    
-    % clean workspace
-    clear Wi Ui Pi dtWi dtUi dtPi dtWii dtUii dtPii fo Div_fVo Div_fVBGo Div_tz Div_tx dtW dtU dtP etac
     
     % print diagnostics
     fprintf(1,'\n         time to solution = %4.4f sec\n\n',toc);
@@ -308,8 +321,10 @@ while time < tend && step < M
     fprintf(1,'         min p    = %s%4.4f;   mean p    = %s%4.4f;   max p    = %s%4.4f;\n\n',int8(min(  p(:))<0),min(  p(:)),int8(mean(  p(:))<0),mean(  p(:)),int8(max(  f(:))<0),max(  p(:)));
     
     fprintf(1,'         min f    = %s%4.4f;   mean f    = %s%4.4f;   max f    = %s%4.4f;\n'  ,int8(min(  f(:))<0),min(  f(:)),int8(mean(  f(:))<0),mean(  f(:)),int8(max(  f(:))<0),max(  f(:)));
-    fprintf(1,'         min K    = %s%4.4f;   mean K    = %s%4.4f;   max K    = %s%4.4f;\n\n',int8(min(  K(:))<0),min(  K(:)),int8(mean(  K(:))<0),mean(  K(:)),int8(max(  K(:))<0),max(  K(:)));
-    
+    fprintf(1,'         min T    = %s%4.4f;   mean T    = %s%4.4f;   max T    = %s%4.4f;\n'  ,int8(min(  T(:))<0),min(  T(:)),int8(mean(  T(:))<0),mean(  T(:)),int8(max(  T(:))<0),max(  f(:)));
+    fprintf(1,'         min C    = %s%4.4f;   mean C    = %s%4.4f;   max C    = %s%4.4f;\n\n',int8(min(MAJ(:))<0),min(MAJ(:)),int8(mean(MAJ(:))<0),mean(MAJ(:)),int8(max(MAJ(:))<0),max(  f(:)));
+
+    fprintf(1,'         min K    = %s%4.4f;   mean K    = %s%4.4f;   max K    = %s%4.4f;\n'  ,int8(min(   K(:))<0),min(   K(:)),int8(mean(   K(:))<0),mean(   K(:)),int8(max(   K(:))<0),max(   K(:)));
     fprintf(1,'         min  eta = %s%4.4f;   mean  eta = %s%4.4f;   max  eta = %s%4.4f;\n'  ,int8(min( eta(:))<0),min( eta(:)),int8(mean( eta(:))<0),mean( eta(:)),int8(max( eta(:))<0),max( eta(:)));
     fprintf(1,'         min zeta = %s%4.4f;   mean zeta = %s%4.4f;   max zeta = %s%4.4f;\n\n',int8(min(zeta(:))<0),min(zeta(:)),int8(mean(zeta(:))<0),mean(zeta(:)),int8(max(zeta(:))<0),max(zeta(:)));
     

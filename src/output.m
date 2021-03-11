@@ -2,25 +2,6 @@
 frame = floor(step/nop);
 fprintf('\n*****  preparing output frame %d for %s \n',frame,runID);
 
-try close(fh1); catch; end
-try close(fh2); catch; end
-try close(fh3); catch; end
-try close(fh4); catch; end
-clear fh1 fh2 fh3 fh4;
-
-if save_op
-    name = ['../out/',runID,'/',runID,'_cont'];
-    save([name,'.mat']);
-    name = ['../out/',runID,'/',runID,'_',num2str(frame)];
-    save([name,'.mat']);
-    
-    if step == 0
-        logfile = ['../out/',runID,'/',runID,'.log'];
-        if exist(logfile,'file'); delete(logfile); end
-        diary(logfile)
-    end
-end
-
 % prepare for plotting
 TX = {'Interpreter','Latex'}; FS = {'FontSize',18};
 TL = {'TickLabelInterpreter','Latex'}; TS = {'FontSize',14};
@@ -34,10 +15,10 @@ axl = 1.75; axr = 0.90;
 set(0,'DefaultFigureVisible',plot_op)
 
 % prepare and plot figure for mechanical solution fields
-fh1 = figure; colormap(ocean);
+fh1 = figure(1); colormap(ocean);
 fh = axb + 2*axh + 1*avs + axt;
 fw = axl + 3*axw + 2*ahs + axr;
-set(fh1,UN{:},'Position',[4 4 fw fh]);
+set(fh1,UN{:},'Position',[3 3 fw fh]);
 set(fh1,'PaperUnits','Centimeters','PaperPosition',[0 0 fw fh],'PaperSize',[fw fh]);
 set(fh1,'Color','w','InvertHardcopy','off');
 set(fh1,'Resize','off');
@@ -70,10 +51,10 @@ set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['comp. pressure $p$'],TX{:},FS
 drawnow;
 
 % prepare and plot figure for material properties
-fh2 = figure; colormap(ocean);
+fh2 = figure(2); colormap(ocean);
 fh = axb + 2*axh + 1*avs + axt;
 fw = axl + 3*axw + 2*ahs + axr;
-set(fh2,UN{:},'Position',[8 8 fw fh]);
+set(fh2,UN{:},'Position',[6 6 fw fh]);
 set(fh2,'PaperUnits','Centimeters','PaperPosition',[0 0 fw fh],'PaperSize',[fw fh]);
 set(fh2,'Color','w','InvertHardcopy','off');
 set(fh2,'Resize','off');
@@ -106,22 +87,19 @@ set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ shear stress $\tau
 drawnow;
 
 % prepare and plot figure for thermo-chemical solution fields
-fh3 = figure; colormap(ocean);
-fh = axb + 3*axh + 2*avs + axt;
+fh3 = figure(3); colormap(ocean);
+fh = axb + 2*axh + 1*avs + axt;
 fw = axl + 3*axw + 2*ahs + axr;
-set(fh3,UN{:},'Position',[12 12 fw fh]);
+set(fh3,UN{:},'Position',[9 9 fw fh]);
 set(fh3,'PaperUnits','Centimeters','PaperPosition',[0 0 fw fh],'PaperSize',[fw fh]);
 set(fh3,'Color','w','InvertHardcopy','off');
 set(fh3,'Resize','off');
-ax(1) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+2*axh+2*avs axw axh]);
-ax(2) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+2*axh+2*avs axw axh]);
-ax(3) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+2*axh+2*avs axw axh]);
-ax(4) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+1*axh+1*avs axw axh]);
-ax(5) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+1*axh+1*avs axw axh]);
-ax(6) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+1*axh+1*avs axw axh]);
-ax(7) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+0*axh+0*avs axw axh]);
-ax(8) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
-ax(9) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
+ax(1) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+1*axh+1*avs axw axh]);
+ax(2) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+1*axh+1*avs axw axh]);
+ax(3) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+1*axh+1*avs axw axh]);
+ax(4) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+0*axh+0*avs axw axh]);
+ax(5) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
+ax(6) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
 
 set(fh3, 'CurrentAxes', ax(1))
 imagesc(xc,zc,T(ic,ic)); axis ij equal tight; box on; cb = colorbar;
@@ -131,38 +109,58 @@ set(fh3, 'CurrentAxes', ax(2))
 imagesc(xc,zc,f(ic,ic)); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melt fraction $\phi$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
 set(fh3, 'CurrentAxes', ax(3))
-imagesc(xc,zc,(RctR_f(ic,ic)+RctR_fo(ic,ic))/2); axis ij equal tight; box on; cb = colorbar;
+imagesc(xc,zc,RctR_f(ic,ic)); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melting Rate $\Gamma$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
 set(fh3, 'CurrentAxes', ax(4))
 imagesc(xc,zc,MAJ(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Temperature $T$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
-text(0,0.9*L,['time ',num2str(time,4)],TX{:},FS{:},'HorizontalAlignment','center','VerticalAlignment','middle')
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Major elements $C_\mathrm{maj}$'],TX{:},FS{:});
 set(fh3, 'CurrentAxes', ax(5))
 imagesc(xc,zc,TRI(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melt fraction $\phi$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Incomp. tracer $C_\mathrm{tri}$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
 set(fh3, 'CurrentAxes', ax(6))
 imagesc(xc,zc,TRC(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melting Rate $\Gamma$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
-set(fh3, 'CurrentAxes', ax(7))
-imagesc(xc,zc,ISS(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Solid stable isotope $C_\mathrm{iss}$'],TX{:},FS{:});
-set(fh3, 'CurrentAxes', ax(8))
-imagesc(xc,zc,ISF(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Fluid stable isotope $C_\mathrm{isf}$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
-set(fh3, 'CurrentAxes', ax(9))
-imagesc(xc,zc,0.*TRC(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['place holder'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Comp. tracer $C_\mathrm{trc}$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
 drawnow;
+
+
+% prepare and plot figure for thermo-chemical solution fields
+fh4 = figure(4); colormap(ocean);
+fh = axb + 2*axh + 1*avs + axt;
+fw = axl + 2*axw + 1*ahs + axr;
+set(fh4,UN{:},'Position',[12 12 fw fh]);
+set(fh4,'PaperUnits','Centimeters','PaperPosition',[0 0 fw fh],'PaperSize',[fw fh]);
+set(fh4,'Color','w','InvertHardcopy','off');
+set(fh4,'Resize','off');
+ax(1) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+1*axh+1*avs axw axh]);
+ax(2) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+1*axh+1*avs axw axh]);
+ax(3) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+0*axh+0*avs axw axh]);
+ax(4) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
+
+set(fh4, 'CurrentAxes', ax(1))
+imagesc(xc,zc,IRP(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Rad. parent isotope $C_\mathrm{irp}$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
+text(0,0.9*L,['time ',num2str(time,4)],TX{:},FS{:},'HorizontalAlignment','center','VerticalAlignment','middle')
+set(fh4, 'CurrentAxes', ax(2))
+imagesc(xc,zc,IRD(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Rad. daughter isotope $C_\mathrm{ird}$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
+set(fh4, 'CurrentAxes', ax(3))
+imagesc(xc,zc,ISS(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Sld stable isotope $C_\mathrm{iss}$'],TX{:},FS{:});
+set(fh4, 'CurrentAxes', ax(4))
+imagesc(xc,zc,ISF(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Fld stable isotope $C_\mathrm{isf}$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
+drawnow;
+
 
 % prepare and plot figure for solution residuals
 if plot_cv
-    fh4 = figure; colormap(ocean);
+    fh5 = figure(5); colormap(ocean);
     fh = axb + 2*axh + 1*avs + axt;
     fw = axl + 3*axw + 2*ahs + axr;
-    set(fh4,UN{:},'Position',[16 16 fw fh]);
-    set(fh4,'PaperUnits','Centimeters','PaperPosition',[0 0 fw fh],'PaperSize',[fw fh]);
-    set(fh4,'Color','w','InvertHardcopy','off');
-    set(fh4,'Resize','off');
+    set(fh5,UN{:},'Position',[15 15 fw fh]);
+    set(fh5,'PaperUnits','Centimeters','PaperPosition',[0 0 fw fh],'PaperSize',[fw fh]);
+    set(fh5,'Color','w','InvertHardcopy','off');
+    set(fh5,'Resize','off');
     ax(1) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+1*axh+1*avs axw axh]);
     ax(2) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+1*axh+1*avs axw axh]);
     ax(3) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+1*axh+1*avs axw axh]);
@@ -171,63 +169,63 @@ if plot_cv
     ax(6) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
 
     if bnchmrk
-        set(fh4, 'CurrentAxes', ax(1))
+        set(fh5, 'CurrentAxes', ax(1))
         imagesc(xc,zc,-(W-W_mms)./(1e-16+norm(W_mms(:),2)./N)); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['err. matrix z-velocity $W$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); 
-        set(fh4, 'CurrentAxes', ax(2))
+        set(fh5, 'CurrentAxes', ax(2))
         imagesc(xc,zc, (U-U_mms)./(1e-16+norm(U_mms(:),2)./N)); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['err. matrix x-velocity $U$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
-        set(fh4, 'CurrentAxes', ax(3))
+        set(fh5, 'CurrentAxes', ax(3))
         imagesc(xc,zc, (P-P_mms)./(1e-16+norm(P_mms(:),2)./N)); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['err. pore pressure $P$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
-        set(fh4, 'CurrentAxes', ax(4))
+        set(fh5, 'CurrentAxes', ax(4))
         imagesc(xc,zc, (T-T_mms)./(1e-16+norm(T_mms(:),2)./N)); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['err. temperature $T$'],TX{:},FS{:});
-        set(fh4, 'CurrentAxes', ax(5))
+        set(fh5, 'CurrentAxes', ax(5))
         imagesc(xc,zc, (C-C_mms)./(1e-16+norm(C_mms(:),2)./N)); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['err. composition $C$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
-        set(fh4, 'CurrentAxes', ax(6))
+        set(fh5, 'CurrentAxes', ax(6))
         imagesc(xc,zc, (f-f_mms)./(1e-16+norm(f_mms(:),2)./N)); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['err. liquid fraction $\phi$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
         drawnow;
     else
-        set(fh4, 'CurrentAxes', ax(1))
+        set(fh5, 'CurrentAxes', ax(1))
         imagesc(xc,zc,(-dW./(1e-16+norm(W(:)+WBG(:),2)./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. matrix z-velocity $W$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
-        set(fh4, 'CurrentAxes', ax(2))
+        set(fh5, 'CurrentAxes', ax(2))
         imagesc(xc,zc,( dU./(1e-16+norm(W(:)+WBG(:),2)./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. matrix x-velocity $U$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
-        set(fh4, 'CurrentAxes', ax(3))
+        set(fh5, 'CurrentAxes', ax(3))
         imagesc(xc,zc,( dP./(1e-16+norm(P(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. pore pressure $P$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
-        set(fh4, 'CurrentAxes', ax(4))
-        imagesc(xc,zc,( res_T*(dt/10)./(1e-16+norm(T(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        set(fh5, 'CurrentAxes', ax(4))
+        imagesc(xc,zc,(-res_T*(dt/10)./(1e-16+norm(T(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. temperature $T$'],TX{:},FS{:});
-        set(fh4, 'CurrentAxes', ax(5))
-        imagesc(xc,zc,( res_MAJ*(dt/10)./(1e-16+norm(MAJ(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        set(fh5, 'CurrentAxes', ax(5))
+        imagesc(xc,zc,(-res_MAJ*(dt/10)./(1e-16+norm(MAJ(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. composition $C$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
-        set(fh4, 'CurrentAxes', ax(6))
-        imagesc(xc,zc,( res_f*(dt/10)./(1e-16+norm(f(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        set(fh5, 'CurrentAxes', ax(6))
+        imagesc(xc,zc,(-res_f*(dt/10)./(1e-16+norm(f(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. liquid fraction $\phi$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
         drawnow;
     end
     
     if ~bnchmrk
-        figure(200); clf;
-        pp = linspace(-1,max(p(:)),1e3);
+        figure(6); clf;
+        pp = linspace(-1,max(Pe(:)),1e3);
         
-        plot(pp,eps0.*ones(size(pp)),'k',pp,1+pp,'r',p(:),yieldt(:),'r.','LineWidth',2); axis equal tight; box on; hold on;
-        scatter(p(:),tau(:),20,(eta(:)),'filled'); colorbar; colormap(ocean);
+        plot(pp,eps0.*ones(size(pp)),'k',pp,min(1+pp,2+pp/2),'r',Pe(:),yieldt(:),'r.','LineWidth',2); axis equal tight; box on; hold on;
+        scatter(Pe(:),tau(:),20,(eta(:)),'filled'); colorbar; colormap(ocean);
         
-        set(gca,'XTick',[0:B:10*B],'YTick',[0:B:10*B],'TickLabelInterpreter','latex','FontSize',15)
+        set(gca,'TickLabelInterpreter','latex','FontSize',15)
         title('Failure Criterion','Interpreter','latex','FontSize',22)
         xlabel('Effective Pressure','Interpreter','latex','FontSize',18)
         ylabel('Dev. Stress Magnitude','Interpreter','latex','FontSize',18)
         drawnow;
         
-        figure(201); clf;
+        figure(7); clf;
         TT = linspace(0,1,1e3);
-        [~,CCS,CCf]  =  equilibrium(TT,0.*TT,perT,perCs,perCf,PhDg);
+        [~,CCS,CCf] = equilibrium(TT,0.*TT,perT,perCs,perCf,PhDg);
         
         plot(CCS,TT,'k-','LineWidth',2); axis tight; hold on; box on;
         plot(CCf,TT,'k-','LineWidth',2);
@@ -253,12 +251,32 @@ end
 
 % save output frame
 if save_op
-    clear ax cb fw axw axh avs ahs axl axr axt axb fh fw TX TL FS TS UN p0 dWi dWii dUi dUii dPi dPii Vel k kk etav etay
+    % clean workspace
+    clear Wi Ui Pi dWi dUi dPi Rfo RTo RMAJo RTRIo RTRCo RIRPo RIRDo RISSo RISFo Div_tz Div_tx dtW dtU dtP etac yield_GM yield_MC
+    clear ax cb fw axw axh avs ahs axl axr axt axb fh fw TX TL FS TS UN p0 Vel k kk pp CCs CCf TT
+    clear Div_fV V_GrdT Div_fMAJV Div_fTRIV DIV_fTRCV Div_fIRPV Div_fIRDV V_GrdISS V_GrdISF V_GrdDMG
+    clear Lpl_f Lpl_T Lpl_MAJ Lpl_TRI Lpl_TRC Lpl_IRP Lpl_IRD Lpl_ISS Lpl_ISF Lpl_DMG
 
     name = ['../out/',runID,'/',runID,'_svp_',num2str(frame)];
     print(fh1,name,'-dpng','-r300');
-    name = ['../out/',runID,'/',runID,'_stc_',num2str(frame)];
-    print(fh3,name,'-dpng','-r300');
     name = ['../out/',runID,'/',runID,'_mat_',num2str(frame)];
     print(fh2,name,'-dpng','-r300');
+    name = ['../out/',runID,'/',runID,'_stc_',num2str(frame)];
+    print(fh3,name,'-dpng','-r300');
+    name = ['../out/',runID,'/',runID,'_sis_',num2str(frame)];
+    print(fh4,name,'-dpng','-r300');
+    
+    clear fh1 fh2 fh3 fh4 fh5;
+
+    name = ['../out/',runID,'/',runID,'_cont'];
+    save([name,'.mat']);
+    name = ['../out/',runID,'/',runID,'_',num2str(frame)];
+    save([name,'.mat']);
+    
+    if step == 0
+        logfile = ['../out/',runID,'/',runID,'.log'];
+        if exist(logfile,'file'); delete(logfile); end
+        diary(logfile)
+    end
+    
 end
