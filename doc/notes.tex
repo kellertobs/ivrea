@@ -15,7 +15,12 @@
 \maketitle \linenumbers \doublespace
 
 \section{Introduction}
-Porous flow of liquid and/or gas phases through deforming granular solids is an ubiquitous process in natural and engineering systems. In the geosciences, the process applies to the transport of silicate melts and aqueous fluids through the shallow mantle and crust, to the percolation of water and hydrocarbons through variably consolidated sediment stacks, and to water flow through polycrystalline ice in alpine glaciers and polar ice sheets. Understanding the characteristic rates and spatial patterns pertaining to these processes requires knowledge of the non-linear interactions between the segregation of the pore fluid and the shear and de/compaction deformation of the solid matrix. In particular, these systems are known to be prone to localisation of flow and deformation into narrow channels and bands.
+In continental arc and rift volcanism erupting lavas are thought to be fed through trans-crustal magma processing systems extending down into the deep crust and mantle lithosphere. The magma source, however, is located even deeper down in the mantle asthenosphere, where decompression by upward mantle flow and/or fluxing by aqueous fluid infiltration lead to partial melting of hot mantle rock. The processes by which mantle melts first ascend into the base of the continental plate above and their rates and spatial distribution remain poorly understood. Current gaps in knowledge are due to, on one hand, the challenges in gaining sufficiently resolved data on these regions by geophysical imaging methods. The materials involved can only be sampled in few locations where lower crustal section have been tilted and eroded to reveal the roots of a transcrustal magmatic system, or through occasional xenoliths, rock pieces brought from depth to the surface in fast ascending magmas. On the other hand, modelling of melt ascent into the base of a plate is challenging due to a range of complex nonlinearities inherent in the problem. Mechanical interactions between melt and host rock are prone to instabilities and localisation feedbacks, leading to narrowly localised zones of enhanced melt flow and rock deformation. Thermochemical reactions between the phases can also lead to localising feedbacks such as dissolution channels solidification chimneys.
+
+One possible way to gain better understanding of melt ascending into the deep crust is to use the chemistry of plutonic and volcanic igneous rocks as records of the dynamic process environments experienced during magma ascent and emplacement. This task is complicated by the fact that geochemical signatures in final rock products are the result of reaction and transport rates acting along a potentially protracted and circuitous trajectory through pressure-temperature-composition space. Interpreting final compositions in terms of mass balancing models, whereby a composition is modelled as a mixture of assumed end-members (e.g., source rock, fractionated crystals, crustal assimilant), is widely practised but results are inherently non-unique. 
+
+In this contribution, we present a coupled thermo-chemical-mechanical model of melt ascent into the base of an overriding plate. The model includes two-phase mechanics including non-Newtonian rheology and decompaction failure, as well as a thermo-chemical model considering the evolution of melt fraction as a function of temperature and major-element composition, as well as tracking compactible and incompatible trace elements, and radiogenic and stable isotopic composition. The geochemical evolution model employs an idealised approach whereby the complex geochemistry involving a dozen major elements, a few minor elements and volatiles, tens of trace elements, and a diversity of radiogenic decay and stable isotope systems are reduced to few idealised components approximating some of the key behaviours of each aspect of geochemistry.
+
 
 %\begin{figure}[htb]
 %  \centering
@@ -27,39 +32,43 @@ Porous flow of liquid and/or gas phases through deforming granular solids is an 
 
 \section{Method}
 
-\subsection{Physical model}
+\subsection{Mechanical model}
 
-The porous segregation of melt is modelled as an incompressible, viscous fluid, percolating through a permeable and deformable matrix, of incompressible, visco-plastic solid. The two-phase system is subject to decompaction failure. The non-dimensionalised (two-dimensional, plane-strain) governing equations expressing conservation of mass and momentum in the two-phase mixture are,
+Melt ascent is modelled as the porous flow of an incompressible, viscous fluid through a permeable and deformable matrix of incompressible, visco-plastic solid subject to decompaction failure. The non-dimensionalised governing equations expressing conservation of mass and momentum in the two-phase mixture are,
 \begin{linenomath*}
 \begin{subequations}
 \label{eq:governing}
 \begin{align}
 	\label{eq:moment-mixture}
-	\Grad P &= - \Grad p + \Div \underline{\boldsymbol{\tau}}  \ , \\
+	\Grad P &= - \Grad p + \Div \underline{\boldsymbol{\tau}} + \phi \mathrm{B} \hat{\mathbf{z}}  \ , \\
 	\label{eq:mass-mixture}
-	\Div \mathbf{V} &= \Div \vel \ ,
+	\Div \mathbf{V} &= - \Div \vel \ ,
 %	\label{eq:liquid-evo}
 %	\dfrac{D_b \phi}{D t} &= \Div (\mathrm{F}-\phi) \mathbf{V}  \ ,
 \end{align}
 \end{subequations}
 \end{linenomath*}
-where $\mathbf{V} = [U,W]$ is the dynamic velocity, and $P$ the dynamic pressure of the mixture, $\vel = [u,w]$ the segregation velocity of the pore fluid, $p$ the compaction pressure, and $\underline{\boldsymbol{\tau}} = [\tau_{xx},\tau_{zz},\tau_{xz}]$ the shear stress tensor of the solid matrix. The dimensionless number $\mathrm{F}$ is introduced below. $\nabla = [\partial/\partial x,\partial/\partial z]$ is the partial spatial derivative, and $D_b/Dt = \partial/\partial t + \mathbf{V}_b \cdot \Grad$ the Lagrangian time derivative in the reference frame of the background flow field (see next paragraph). All variables and parameters are functions of position, $\mathbf{x} = [x,z]$, and time, $t$, unless indicated otherwise by a subscript nought. The depth coordinate $z$ points in the direction of gravity. We have assumed that buoyancy-driven creep of the matrix is negligible compared to stress-driven shear and compaction flow. The model is purely mechanical and neglects thermo-chemical evolution and phase-change reactions.
+where $\mathbf{V} = [U,V,W]$ is the dynamic velocity, and $P$ the dynamic pressure of the mixture, $\vel = [u,v,w]$ the segregation velocity of the pore fluid, and $p$ the compaction pressure and $\underline{\boldsymbol{\tau}}$ the shear stress tensor of the solid matrix. $\nabla = [\partial/\partial x,\partial/\partial y,\partial/\partial z]$ is the partial spatial derivative. All variables and parameters are functions of position, $\mathbf{x} = [x,y,z]$, and time, $t$, unless indicated otherwise by a subscript nought. The unit vector of the depth coordinate,  $\hat{\mathbf{z}} $, points in the direction of gravity. The dimensionless number $\mathrm{B}$ expresses the magnitude of buoyancy forces to tensile strength of the aggregate (more details below). 
 
-The mixture velocity and pressure are each reduced by subtracting an invariant background field with constant spatial gradients. The dynamic pressure, $P$, is the Stokes pressure of the mixture reduced by a lithostatic background field, $P_b$, with $\Grad P_\mathrm{lith} = [0,\rho_{s,0} g_0]$, where $\rho_{s,0}$ is the constant solid matrix density, and $g_0$ the gravity constant. The dynamic velocity is the Stokes velocity of the mixture reduced by a background flow field, $\mathbf{V}_b$, with $\Grad \mathbf{V}_b = [-\mathrm{Pu}, \mathrm{Pu}, -\mathrm{Si}] \ \mathrm{s}^{-1}$, where $\mathrm{Pu}$ and $\mathrm{Si}$ are dimensionless factors by which the relative magnitudes of pure- and simple-shear background flows will be adjusted. Positive and negative values of $\mathrm{Pu}$ induce compressional and extensional pure shear, respectively, while simple shear follows a dextral shear sense along the $x$-coordinate and a sinistral sense along the $z$-coordinate for positive values of $\mathrm{Si}$, and vice versa.
+%and $D_b/Dt = \partial/\partial t + \mathbf{V}_b \cdot \Grad$ the Lagrangian time derivative in the reference frame of the background flow field (see next paragraph)
 
-The non-dimensionalised closures for  segregation velocity, $\vel$, compaction pressure, $p$, shear-stress tensor, $\underline{\boldsymbol{\tau}}$, and visco-plastic matrix rheology are,
+The dynamic velocity and pressure are each reduced by an invariant background field with constant spatial gradients. The dynamic pressure, $P$, is the Stokes pressure of the mixture reduced by a lithostatic background field, $P_b$, with $\Grad P_\mathrm{lith} = [0,\rho_0 g_0]$, where $\rho_0$ is the constant solid matrix density, and $g_0$ the gravity constant. The dynamic velocity is the Stokes velocity of the mixture reduced by a background flow field, $\mathbf{V}_b$, which can assume both pure- and simple-shear flow patterns adjusted by dimensionless factors $\mathrm{Pu}$, and $\mathrm{Si}$ which control the magnitude of shear stress induced by backround deformation relative to the tensile strength of the aggregate.
+
+The non-dimensionalised closures for segregation velocity, $\vel$, compaction pressure, $p$, shear-stress tensor, $\underline{\boldsymbol{\tau}}$, and visco-plastic matrix rheology are,
 \begin{linenomath*}
 \begin{subequations}
 \label{eq:nondim-coeffs}
 \begin{align}
 	\label{eq:nondim-coeffs-segr}
-	\vel &= -\phi^m \left( \Grad P + \mathrm{B} \hat{\mathbf{z}} \right) \ , \\
+	\vel &= -K \left( \Grad P + \mathrm{B} \hat{\mathbf{z}} \right) \ , \\
 	\label{eq:nondim-coeffs-cpct}
-	p &= -\dfrac{\mathrm{F} \eta}{\phi} \Div \mathbf{V} \ , \\
+	p &= -\dfrac{\eta}{\phi} \Div \mathbf{V} \ , \\
 	\label{eq:nondim-coeffs-stress}
 	\underline{\boldsymbol{\tau}} &= \eta \, \underline{\dot{\boldsymbol{\varepsilon}}} \ , \\
+	\label{eq:nondim-darcy}
+	K &= \left(\dfrac{\phi}{\phi_0}\right)^m \exp \left(-E^\ell \left[ \dfrac{1}{T} - \dfrac{1}{T_0} \right] \right) \ , \\
 	\label{eq:nondim-coeffs-viscoplast}
-	\eta &= \min\left( \exp \left(-\dfrac{\lambda} {\mathrm{F}} (\phi-1) \right) \left(\dfrac{\dot{\varepsilon}}{\dot{\varepsilon}_b} \right)^{-n} \: , \:\: \dfrac{\tau_y}{\dot{\varepsilon}} + \eta_\mathrm{min} \right) \ , \\
+	\eta &= \min\left( \exp \left( E^s \left[ \dfrac{1}{T} - \dfrac{1}{T_0} \right] -\dfrac{\lambda} {\mathrm{F}} (\phi-\phi_0) \right) \left(\dfrac{\dot{\varepsilon}}{\dot{\varepsilon}_b} \right)^{-n} \: , \:\: \dfrac{\tau_y}{\dot{\varepsilon}} + \eta_\mathrm{min} \right) \ , \\
 	\label{eq:nondim-coeffs-yield}
 	\tau_y &= 1 + p \ .
 \end{align}
@@ -71,39 +80,53 @@ $\hat{\mathbf{z}}$ is the unit vector pointing along the depth coordinate. The s
 \label{eq:nondim-strainr}
 \begin{align}
 	\label{eq:nondim-strainr-comps}
-	\underline{\dot{\boldsymbol{\varepsilon}}} &= [\dot{\varepsilon}_{xx},\dot{\varepsilon}_{zz},\dot{\varepsilon}_{xz}] \ , \\
-	\label{eq:nondim-strainr-compxx}
-	\dot{\varepsilon}_{xx} &= \dfrac{2}{3} \dfrac{\partial U}{\partial x} - \dfrac{1}{3} \dfrac{\partial W}{\partial z} - \mathrm{Pu} \ , \\
-	\label{eq:nondim-strainr-compzz}
-	\dot{\varepsilon}_{zz} &= \dfrac{2}{3} \dfrac{\partial W}{\partial z} - \dfrac{1}{3} \dfrac{\partial U}{\partial x} + \mathrm{Pu} \ , \\
-	\label{eq:nondim-strainr-compxz}
-	\dot{\varepsilon}_{xz} &= \dfrac{1}{2} \left( \dfrac{\partial U}{\partial z} + \dfrac{\partial W}{\partial x} \right) - \mathrm{Si} \ , \\
+	\underline{\dot{\boldsymbol{\varepsilon}}} &= \frac{1}{2} \left(\Grad \mathbf{V} + \Grad \mathbf{V}^T\right) -\frac{1}{3} \Div \mathbf{V} \underline{\mathbf{I}} \ , \\
 	\label{eq:nondim-strainr-magn}
-	\dot{\varepsilon} &= \sqrt{\dfrac{1}{2} \left(\dot{\varepsilon}_{xx} + \dot{\varepsilon}_{zz} + 2 \dot{\varepsilon}_{xz} \right)} \ . 
+	\dot{\varepsilon} &= \sqrt{\dfrac{1}{2} \underline{\dot{\boldsymbol{\varepsilon}}} :  \underline{\dot{\boldsymbol{\varepsilon}}} } \ . 
 \end{align}
 \end{subequations}
 \end{linenomath*}
-The dimensionless number $\mathrm{F} = \phi_0^{-1}$ expresses the compaction to shear viscosity ratio, i.e., the inverse of the characteristic porosity. The matrix creep viscosity is weakened exponentially by pore fluid with a factor $\lambda=30$, and is softened by the strain rate magnitude, $\dot{\varepsilon}$ with a non-Newtonian powerlaw exponent $n=2/3$. The reference strain-rate for the non-Newtonian powerlaw is determined by the applied pure- and/or simple-shear background deformation, $\varepsilon_b = |\mathrm{Pu}| + |\mathrm{Si}|$. Hence, the shear viscosity at $\phi = 1$ and $\varepsilon = \varepsilon_b$ is equal to unity, and the compaction viscosity equal to $\mathrm{F}$. The visco-plastic matrix rheology is implemented using an effective-viscosity approach limiting shear stress as a function of compaction pressure not to exceed the tensile failure criterion, $\tau_y$ (see Fig. \ref{fig:yield}). A minimum yield viscosity, $\eta_min$, is added to regularise the problem by imposing a minimum length scale of localised failure zones.
+The rheological coefficients are centred on the reference melt fraction, $\phi_0$, temperature, $T_0$, and strain-rate $\dot{\varepsilon}_b$. The matrix creep viscosity is weakened exponentially by the presence of melt with a factor $\lambda=30$, by inverse temperature with the solid activation energy $E^s$,  and is softening as a powerlaw of the strain rate magnitude, $\dot{\varepsilon}$, with a non-Newtonian powerlaw exponent $n=2/3$. The reference strain-rate for the non-Newtonian powerlaw is determined by the applied pure- and/or simple-shear background deformation, $\dot{\varepsilon}_b = |\mathrm{Pu}| + |\mathrm{Si}|$. Hence, the dimensionless shear viscosity, $\eta$, at $\phi = \phi_0$, $T = T_0$, and $\dot{\varepsilon} = \dot{\varepsilon}_b$ is equal to unity, and the compaction viscosity equal to $\phi^{-1}$. Decompaction failure is implemented using an effective-viscosity approach limiting shear stress as a function of compaction pressure so as not to exceed the tensile failure criterion, $\tau_y$ (see Fig. \ref{fig:yield}). A minimum yield viscosity, $\eta_\mathrm{min}$, is added to regularise the problem by imposing a minimum length scale of localised failure zones.
 
-To highlight the role of decompaction failure, we have scaled pressures and stresses by the tensile strength of the matrix, $p_o = \sigma_{T,0}$. The dimensionless number $\mathrm{B} = \Delta \rho_0 g_0 \delta_0 / \sigma_{T,0}$ expresses the relative magnitude of the buoyancy-related phase pressure difference relative to the tensile strength scale. The former is a natural scale of the Stokes-Darcy problem proportional to $\Delta \rho_0$, the matrix-fluid density difference. Velocities are scaled by the Darcy speed scale $w_0 = K_0 p_0/\ell_0$, and length by $\ell_0 = \sqrt{\eta_0 K_0}$, a natural scale of the problem related to the segregation-compaction length, $\delta_0 =  \sqrt{F} \ell_0$, where $\eta_0$ is the characteristic matrix shear viscosity, and $K_0$ the Darcy coefficient scale, $K_0 = a_0^2 \phi_0^m / (b_0 \mu_0)$, with $a_0$ the characteristic matrix grain size, $b_0 = 100$ a geometrical constant, and $\mu_0$ the characteristic fluid viscosity.
+To highlight the role of decompaction failure, we have scaled pressures and stresses by the tensile strength of the matrix, $p_o = \sigma_{T,0}$ to non-dimensionalise the problem. The dimensionless number $\mathrm{B} = \Delta p_0 / \sigma_{T,0}$ expresses the relative magnitude of the buoyancy-related phase pressure difference, $ \Delta p_0 = \Delta \rho_0 g_0 \delta_0$, relative to the tensile strength scale. The former is a natural scale of the Stokes-Darcy problem proportional to the matrix-melt density difference, $\Delta \rho_0$. Velocities are scaled by the Darcy speed scale $w_0 = K_0 p_0/\ell_0$, and length by $\ell_0 = \sqrt{\eta_0 K_0}$, a natural scale of the problem related to the segregation-compaction length, $\delta_0 =  \sqrt{\phi_0^{-1}} \ell_0$, where $\eta_0$ is the characteristic matrix shear viscosity, and $K_0 = a_0^2 \phi_0^m / (b_0 \mu_0)$ the Darcy coefficient scale, with $a_0$ the characteristic matrix grain size, $b_0 = 100$ a geometrical constant, and $\mu_0$ the characteristic melt viscosity.
+
+\subsection{Thermo-chemical model}
+
+The thermo-chemical evolution by coupled reaction-transport processes in the partially molten mixture is modelled by a set of equations conserving energy, phase, and component mass, and evolving trace and isotopic composition,
+\begin{linenomath*}
+\begin{subequations}
+\label{eq:nondim-coeffs}
+\begin{align}
+	\label{eq:nondim-phase}
+	\dfrac{\partial \phi}{\partial t}  &= \Div (1-\phi) \mathbf{v}^s +  \Gamma \ , \\
+	\label{eq:nondim-energy}
+	\dfrac{\partial T}{\partial t} &= - \bar{\mathbf{v}} \cdot \Grad T + \dfrac{ \boldsymbol{\nabla}^2 T }{\mathrm{Pe}_T} - \dfrac{\Gamma}{\mathrm{St}} \ , \\
+	\label{eq:nondim-major}
+	\dfrac{\partial \bar{c}_\mathrm{maj}}{\partial t} &= - \Div \overline{c_\mathrm{maj} \mathbf{v}} + \dfrac{ \boldsymbol{\nabla}^2 \bar{c}_\mathrm{maj} }{\mathrm{Pe}_c}  \ , \\
+	\label{eq:nondim-trace}
+	\dfrac{\partial \bar{c}_\mathrm{tra}}{\partial t} &= - \Div  \overline{c_\mathrm{tra} \mathbf{v}} + \dfrac{ \boldsymbol{\nabla}^2 \bar{c}_\mathrm{tra} }{\mathrm{Pe}_c}  \ , \\
+	\label{eq:nondim-radiogen-parent}
+	\dfrac{\partial \bar{c}_\mathrm{irp}}{\partial t} &= - \Div  \overline{c_\mathrm{irp} \mathbf{v}} + \dfrac{ \boldsymbol{\nabla}^2 \bar{c}_\mathrm{irp} }{\mathrm{Pe}_c}  - \Gamma_D  \ , \\
+	\label{eq:nondim-radiogen-daughter}
+	\dfrac{\partial \bar{c}_\mathrm{ird}}{\partial t} &= - \Div  \overline{c_\mathrm{ird} \mathbf{v}} + \dfrac{ \boldsymbol{\nabla}^2 \bar{c}_\mathrm{ird} }{\mathrm{Pe}_c}  + \Gamma_D  \ , \\
+	\label{eq:nondim-stable-matrix}
+	\dfrac{\partial c_\mathrm{ist}^s}{\partial t} &= - \mathbf{v}^s \cdot \Grad c_\mathrm{ist}^s + \dfrac{ \boldsymbol{\nabla}^2 c_\mathrm{ist}^s }{\mathrm{Pe}_c}  - (c_\mathrm{ist}^\Gamma - c_\mathrm{ist}^s) \dfrac{\Gamma}{1-\phi}  \ , \\
+	\label{eq:nondim-stable-melt}
+	\dfrac{\partial c_\mathrm{ist}^\ell}{\partial t} &= - \mathbf{v}^\ell \cdot \Grad c_\mathrm{ist}^\ell + \dfrac{ \boldsymbol{\nabla}^2 c_\mathrm{ist}^\ell}{\mathrm{Pe}_c} + (c_\mathrm{ist}^\Gamma - c_\mathrm{ist}^\ell) \dfrac{\Gamma}{\phi}  \ .
+\end{align}
+\end{subequations}
+\end{linenomath*}
+
+The melt fraction, $\phi$, evolves as a consequence of compaction, that is, divergence in the solid velocity field, $\mathbf{v}_s$, and (volumetric) melting rate, $\Gamma$. Sensible heat characterised by the temperature relative to the interval from lowest to highest melting point evolves as a function of advection by the mixture velocity field, $\bar{\mathbf{v}} = \phi \mathbf{v}^\ell + (1-\phi) \mathbf{v}^s$, diffusion governed by the inverse of the thermal Peclet number, $\mathrm{Pe}_T$, and sensible to latent heat conversion upon melting governed by the Stefan number, $\mathrm{St}$. The major element composition of the mixture, $\bar{c_\mathrm{maj}} = \phi c_\mathrm{maj}^\ell + (1-\phi) c_\mathrm{maj}^s$ evolves by divergence in the chemical flux, $c_\mathrm{maj}^s \mathbf{v}^s  + \phi c_\mathrm{maj}^\ell \mathbf{v}^\ell$, and chemical diffusion governed by the chemical Peclet number, $\mathrm{Pe}_c$. Note that chemical diffusivity of major elements is very slow on crustal length scale, hence chemical diffusion could be safely neglected in these models. We include it here for the purpose of regularisation to avoid growth of overly sharp compositional boundaries that can become numerically problematic for advection schemes. The phase compositions, $c_\mathrm{maj}^{\ell,s}$ are functions of temperature and mixture composition defined by a phase diagram. Total mass conservation is observed by only solving for one phase, assuming that the mixture is saturated and both phase fractions sum to unity, and only solving for one major element component assuming that the two components also sum to unity (i.e., the lever rule applies).
+
+The geochemical evolution of trace and isotopic compositions does not need to observe total mass conservation since the elements involved are assumed to be present in trace quantities only. Hence, equations for all components are solved and no unity sum constraints apply. The mixture trace composition, $\bar{c_\mathrm{tra}}$ follows the same form of conservation law as major element composition, with phase trace element compositions, $c_\mathrm{tra}^{\ell,s}$, are set by partition coefficients, $K_\mathrm{tra} = c_\mathrm{tra}^{s}/c_\mathrm{tra}^{\ell}$, here held constant for simplicity. Mixture concentrations of a set of parent and daughter isotopes linked by a radioactive decay system follow the same form of conservation law as major and trace components but are linked by the decay rate, $\Gamma_D = \bar{c}_\mathrm{irp} / (\ln(2) D_\mathrm{1/2})$, proportional to the concentration of the parent isotope, $\bar{c}_\mathrm{irp}$, and the decay number, $D_\mathrm{1/2}$, which is the dimensionless half-life. Stable isotopic composition of the melt and matrix phases are assumed to evolve only by advection on the phase velocity field and mass transfer between phases by phase-change reaction. Diffusion terms are added for the purpose of regularisation.
 
 \subsection{Numerical Implementation}
 
-The model domain is a two-dimensional square of 100$\times$100 non-dimensional size. The initial condition on porosity is a smoothed random noise. The boundary conditions are periodic for all solution variables. Note that dynamic velocity and pressure can be periodic even when the background velocity and pressure fields are non-periodic. Where the advection of $\phi$ on the background flow field requires information from outside the domain boundary an algorithm feeds in random perturbations with properties similar to the initial perturbation field.
+The model is implemented in two dimension on a square domain of $L \times L$ non-dimensional size. The initial condition on temperature is a halfspace  cooling solution representing a cool plate over a near-isothermal mantle. The initial major element concentration is a smoothed random noise to introduce some heterogeneity. The initial melt fraction is set to the equilibrium value given the temperature and bulk composition as specified by an idealised peritectic-eutectic phase diagram. The boundary conditions are free slip and insulating on the sides and free in/outflow and isothermal on the top and base. The side boundaries can be switched to periodic in models where horizontal simple shear dominates the background velocity.
 
-The numerical implementation discretises the governing equations on a regular square grid of 500$\times$500 finite-volume cells using a standard staggered-grid finite-difference scheme. Advection terms are implemented using a flux-conservative, upwind-biased Fromm method. The equations are solved using a damped Richardson iterative scheme. For reasons of numerical stability the shear visco-plasticity, $\eta$, is regularised by applying a small amount of Laplacian smoothing. 
-%TO DO: The numerical algorithm was benchmarked against a manufactured analytical solution and shows second order error convergence with increasing resolution. 
-The simulation code was developed and tested in Matlab version R2020a and is openly available in on github.com/kellertobs/defail.
+The numerical implementation discretises the governing equations on a regular square grid of 500$\times$500 finite-volume cells using a centred staggered-grid finite-difference scheme. Advection terms are implemented using flux-conservative centred or upwind-biased Fromm methods. The equations are solved using a damped Richardson iterative scheme. For reasons of numerical stability the shear visco-plasticity, $\eta$, and the phase reaction rate, $\Gamma$, are regularised by applying a small amount of Laplacian smoothing and lagged iteratively to avoid numerical oscillations. The mechanical part of the numerical algorithm was benchmarked against a manufactured analytical solution and shows second order error convergence with increasing spatial resolution. The simulation code was developed and tested in Matlab version R2020a and is openly available in on github.com/kellertobs/ivrea.
 
-
-\section{Results}
-We test the model sensitivity to changes in the buoyancy number, $\mathrm{B}$, the  pure and simple shear numbers, $\mathrm{Pu}$, and $\mathrm{Si}$, and the compaction-to-shear viscosity ratio, $\mathrm{F}$. As a guide, low $\mathrm{B}$ corresponds to shear-dominated flows, while high $\mathrm{B}$ represents buoyancy-dominated systems; $\mathrm{Pu}$ or $\mathrm{Si}$ smaller than unity means shear stresses effected by applied background deformation are lower than the tensile strength, and vice versa; higher values of $\mathrm{F}$ correspond to lower background pore fluid fraction and higher compaction-to-shear viscosity ratio.
-
-We begin by examining a set of three reference simulations at $\mathrm{F} = 50$, $\mathrm{B} = 1$, and $\mathrm{Pu} = -1$, $\mathrm{Pu} = 1$, and $\mathrm{Si} = 1$, respectively (while holding the other deformation number at nought). Effects of shear- versus buoyancy-dominated fluid percolation are expected to be of similar importance, while stress states are expected to be near the failure point. The compaction-to-shear viscosity ratio corresponds to 2 vol\% fluid fraction. Figure xxx shows the state of 
-
-\section{Discussion}
-
-\section{Conclusions}
 
 %\bibliographystyle{abbrvnat}
 %\bibliography{notes}

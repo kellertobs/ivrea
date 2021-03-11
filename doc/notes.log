@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019) (preloaded format=pdflatex 2019.10.17)  19 FEB 2021 14:33
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019) (preloaded format=pdflatex 2019.10.17)  9 MAR 2021 09:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -305,7 +305,11 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip48
 )
-(./defs.tex) (./notes.aux)
+(./defs.tex) (./notes.aux
+
+LaTeX Warning: Label `eq:nondim-coeffs' multiply defined.
+
+)
 \openout1 = `notes.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 14.
@@ -422,35 +426,38 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 {/usr/local/texlive/2019/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2]
 
-LaTeX Warning: Reference `fig:yield' on page 3 undefined on input line 86.
+LaTeX Warning: Reference `fig:yield' on page 3 undefined on input line 89.
 
-[3] [4]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 214.
- [5]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 214.
+[3] [4] [5] [6]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 237.
+ [7]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 237.
  (./notes.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 214.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 214.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 237.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 237.
 Package rerunfilecheck Info: File `notes.out' has not changed.
-(rerunfilecheck)             Checksum: 63049AE05935050FA2741183B8B244EF;357.
+(rerunfilecheck)             Checksum: 8EBEF69895E9E3CDC9136E5549F847DB;296.
 
 
 LaTeX Warning: There were undefined references.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 214.
+
+LaTeX Warning: There were multiply-defined labels.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 237.
  )
 (\end occurred inside a group at level 1)
 
 ### semi simple group (level 1) entered at line 15 (\begingroup)
 ### bottom level 
 Here is how much of TeX's memory you used:
- 8133 strings out of 492616
- 120399 string characters out of 6129480
- 221393 words of memory out of 5000000
- 11935 multiletter control sequences out of 15000+600000
+ 8144 strings out of 492616
+ 120583 string characters out of 6129480
+ 222771 words of memory out of 5000000
+ 11939 multiletter control sequences out of 15000+600000
  15165 words of font info for 57 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 36i,14n,38p,1085b,472s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 36i,15n,38p,1672b,475s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmbsy10.pfb></usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmbx12.pfb></usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/
@@ -463,10 +470,10 @@ mr12.pfb></usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmr
 pfb></usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmss8.pf
 b></usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb
 ></usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb>
-Output written on notes.pdf (5 pages, 136994 bytes).
+Output written on notes.pdf (7 pages, 144919 bytes).
 PDF statistics:
- 127 PDF objects out of 1000 (max. 8388607)
- 106 compressed objects within 2 object streams
- 28 named destinations out of 1000 (max. 500000)
- 57 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 137 PDF objects out of 1000 (max. 8388607)
+ 114 compressed objects within 2 object streams
+ 35 named destinations out of 1000 (max. 500000)
+ 41 words of extra memory for PDF output out of 10000 (max. 10000000)
 
