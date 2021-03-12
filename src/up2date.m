@@ -11,7 +11,6 @@ tau(ic,ic) = (  (txx(ic,ic).^2 + tzz(ic,ic).^2 ...
 tau([1 end],:) = tau(ibz,:);                                               % periodic boundaries
 tau(:,[1 end]) = tau(:,ibx);
 
-limf = max(flim,min(1-flim,f));
 
 plim = double(f>=flim);
 for k  = 1:ceil(kappa)                                                     % regularisation
@@ -35,6 +34,8 @@ etav(:,[1 end]) = etav(:,ibx);
     
 etay  =  log10(yieldt)-log10(eps);                                         % shear visco-plasticity
 etay  =  min(etav,etay);
+
+limf  = max(flim,min(1-flim,f));
 zetay =  etay - log10(limf.*(1-limf).^0.5);
 
 for k  = 1:ceil(kappa)                                                     % regularisation
@@ -54,13 +55,9 @@ end
  eta  =   etay.*(1-gamma) +  eta.*gamma;                                            % effective shear viscosity
 zeta  =  zetay.*(1-gamma) + zeta.*gamma;                                            % effective shear viscosity
 
-etac  = (eta(im,im)+eta(ip,im) + eta(im,ip)+eta(ip,ip)).*0.25;              % interpolate to cell corners
+etac  = (eta(im,im)+eta(ip,im) + eta(im,ip)+eta(ip,ip)).*0.25;             % interpolate to cell corners
 
-% zeta = eta - log10(limf.*(1-limf).^0.5);                                   % cmpct viscosity
-% zeta = max(log10(etamin/(10*f0)),zeta);
-
-limf = max(flim/2,min(1-flim/2,f));
-K   = log10((limf/f0).^3 .* (1-limf).^1.5 .* exp(-Ef*(1./T-1./T0))) + KDMG.*DMG;      % segregation coefficient
+K   = log10((limf/f0).^3 .* (1-limf).^1.5 .* exp(-Ef*(1./T-1./T0))) + KDMG.*DMG;  % segregation coefficient
 
 % update iterative and physical time step sizes
 dtW = (10.^(( eta(im,:)+ eta(ip,:)).*0.5)./(h/2)^2 ...
