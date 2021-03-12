@@ -176,8 +176,8 @@ while time < tend && step < M
     
     
     % non-linear iteration loop
-    first = 2*double(step==0) + double(step>0);
-    while resnorm/resnorm0 >= rtol/first && resnorm >= atol && it <= maxit*first || it <= minit
+    startup = 2*double(step<=1) + double(step>0);
+    while resnorm/resnorm0 >= rtol/startup && resnorm >= atol && it <= maxit*startup || it <= minit
                 
         % store previous iterative solution guess  
         Wi = W;
