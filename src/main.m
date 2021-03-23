@@ -219,10 +219,10 @@ while time < tend && step < M
         
         
         % update strain rates
-        exx(:,ic)   = diff(U,1,2)./h - ups(:,ic)./3 - Pu;                  % x-normal strain rate
+        exx(:,ic)        = diff(U,1,2)./h - ups(:,ic)./3 - Pu;             % x-normal strain rate
         exx([1 end],:)   = exx(ibz,:);                                     % apply boundary conditions
         exx(:,[1 end])   = exx(:,ibx);               
-        ezz(ic,:)   = diff(W,1,1)./h - ups(ic,:)./3 + Pu;                  % z-normal strain rate
+        ezz(ic,:)        = diff(W,1,1)./h - ups(ic,:)./3 + Pu;             % z-normal strain rate
         ezz([1 end],:)   = ezz(ibz,:);                                     % apply boundary conditions
         ezz(:,[1 end])   = ezz(:,ibx);          
         exz              = 1/2.*(diff(U,1,1)./h+diff(W,1,2)./h) - Si;      % shear strain rate
@@ -255,7 +255,8 @@ while time < tend && step < M
         Div_tx  = diff(txx(ic,:),1,2)./h + diff(txz,1,1)./h;               % x-stress divergence
         
         res_U(ic,:) = - Div_tx + diff(P(ic,:),1,2)./h ...                  % residual x-momentum equation
-                                    + diff(p(ic,:),1,2)./h;
+                               + diff(p(ic,:),1,2)./h;
+                                
         if bnchmrk; res_U = res_U - src_U_mms; end
         
         dU = -res_U.*dtU;
@@ -289,6 +290,7 @@ while time < tend && step < M
         
         % update reference pressure
         res_P = ups + upss;                                                % residual mass equation
+        
         if bnchmrk; res_P = res_P - src_P_mms; end
         
         dP = -res_P.*dtP;
