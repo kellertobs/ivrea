@@ -35,7 +35,7 @@ etav(:,[1 end]) = etav(:,ibx);
 etay  =  log10(yieldt)-log10(eps);                                         % shear visco-plasticity
 etay  =  min(etav,etay);
 
-limf  = max(flim,min(1-flim,f));
+limf  =  max(flim,min(1-flim,f));
 zetay =  etay - log10(limf.*(1-limf).^0.5);
 
 for k  = 1:ceil(kappa)                                                     % regularisation
