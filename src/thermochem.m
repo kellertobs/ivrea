@@ -1,7 +1,58 @@
 % thermochemical solver
 
 if step > 0
-
+    
+    %*****  PHASE EQUILIBRIUM  ************************************************
+    
+    % update equilibrium
+    [fq,MAJsq,MAJfq]  =  equilibrium(T,MAJ,perT,perCs,perCf,PhDg);
+    RctR_f = min(Da,1/(2*dt)).*(fq-f);
+    %     for k  = 1:ceil(kappa)                                                 % regularisation
+    %         kk = kappa/ceil(kappa);
+    %         RctR_fi(ic,ic) = RctR_fi(ic,ic) + kk.*(diff(RctR_fi(ic,:),2,2)+diff(RctR_fi(:,ic),2,1))./8;
+    %         RctR_fi([1 end],:) = RctR_fi(ibz,:);
+    %         RctR_fi(:,[1 end]) = RctR_fi(:,ibx);
+    %     end
+    %     RctR_f = (1-gamma).*RctR_fi + gamma*RctR_f;
+    
+    % update phase major element composition
+    KMAJq = MAJsq./MAJfq;
+    MAJf = MAJ./(f + (1-f).*KMAJq);
+    MAJs = MAJ./(f./KMAJq + (1-f));
+    MAJf(f<=  flim) = MAJfq(f<=  flim);  MAJs(f<=  flim) = MAJ(f<=    flim);
+    MAJf(f>=1-flim) = MAJ  (f>=1-flim);  MAJs(f>=1-flim) = MAJsq(f>=1-flim);
+    
+    % update incompatible trace element phase compositions
+    TRIf = TRI./(f + (1-f).*KTRI);
+    TRIs = TRI./(f./KTRI + (1-f));
+    TRIs(f<=  flim) = TRI(f<=  flim);
+    TRIf(f>=1-flim) = TRI(f>=1-flim);
+    
+    % update compatible trace element phase compositions
+    TRCf = TRC./(f + (1-f).*KTRC);
+    TRCs = TRC./(f./KTRC + (1-f));
+    TRCs(f<=  flim) = TRC(f<=  flim);
+    TRCf(f>=1-flim) = TRC(f>=1-flim);
+    
+    % update radiogenic parent isotope phase compositions
+    IRPf = IRP./(f + (1-f).*KIRP);
+    IRPs = IRP./(f./KIRP + (1-f));
+    IRPs(f<=  flim) = IRP(f<=  flim);
+    IRPf(f>=1-flim) = IRP(f>=1-flim);
+    
+    % update radiogenic daughter isotope phase compositions
+    IRDf = IRD./(f + (1-f).*KIRD);
+    IRDs = IRD./(f./KIRD + (1-f));
+    IRDs(f<=  flim) = IRD(f<=  flim);
+    IRDf(f>=1-flim) = IRD(f>=1-flim);
+    
+    % radiogenic isotope decay rate
+    DcyR_IR = IRP./DIRP.*log(2);
+    
+    % stable isotope transfer composition
+    ISR = double(RctR_f>=0).*ISS + double(RctR_f<0).*ISF;
+    
+    
     % *****  THERMO-CHEMISTRY  ********************************************
     
     % update melt fraction
@@ -16,24 +67,16 @@ if step > 0
     
     res_f = (f-fo)./dt - (theta.*Rf + (1-theta).*Rfo);                     % residual phase evolution equation
     
-    f     = f - res_f.*dt/10;                                              % update phase fraction
+    f     = f - res_f.*dt;                                                 % update phase fraction
     
     iq    = fq<=flim | fq>=(1-flim);
     f(iq) = fq(iq);  res_f(iq) = 0;                                        % enforce equilibrium at low
     
 
-    f([1 2 end-1 end],:) = fq([1 2 end-1 end],:);                          % apply boundary conditions
-    if abs(Si) > abs(Pu)
-        f(:,[1 end]) = f(:,ibx);
-    else
-        f(:,[1 2 end-1 end]) = fq(:,[1 2 end-1 end]);
-    end
-    res_f([1 2 end-1 end],:) = 0;                                          
-    if abs(Si) > abs(Pu)
-        res_f(:,[1 end]) = res_f(:,ibx);
-    else
-        res_f(:,[1 2 end-1 end]) = 0;
-    end
+    f([1 end],:) = f(ibz,:);                                               % apply boundary conditions
+    f(:,[1 end]) = f(:,ibx);
+    res_f([1 end],:) = 0;                                          
+    res_f(:,[1 end]) = 0;
     
     
     % update temperature
@@ -45,7 +88,7 @@ if step > 0
     
     res_T = (T-To)./dt - (theta.*RT + (1-theta).*RTo);                     % residual temperature evolution equation
     
-    T     = T - res_T.*dt/10;                                              % update temperature solution
+    T     = T - res_T.*dt;                                                 % update temperature solution
     
     T([1 end],:) = To([1 end],:);                                          % apply boundary conditions
     T(:,[1 end]) = T(:,ibx);
@@ -63,11 +106,11 @@ if step > 0
     
     res_MAJ = (MAJ-MAJo)./dt - (theta.*RMAJ + (1-theta).*RMAJo);           % residual composition evolution equation
     
-    MAJ     = MAJ - res_MAJ.*dt/10;                                        % update composition solution
+    MAJ     = MAJ - res_MAJ.*dt;                                           % update composition solution
     
     MAJ     = max(1e-16,min(1-1e-16,MAJ));                                 % enforce min/max bounds
         
-    MAJ([1 end],:) = MAJo([1 end],:);                                      % apply boundary conditions
+    MAJ([1 end],:) = MAJ(ibz,:);                                           % apply boundary conditions
     MAJ(:,[1 end]) = MAJ(:,ibx);
     res_MAJ([1 end],:) = 0;
     res_MAJ(:,[1 end]) = 0;
@@ -77,7 +120,7 @@ if step > 0
 
     % update incompatible trace element composition
     Div_fTRIV = flxdiv((1-f).*TRIs,U +UBG,W +WBG,h,'FROMM','flx') ...
-                     + flxdiv(   f .*TRIf,uf+UBG,wf+WBG,h,'FROMM','flx');  % advection/compaction
+              + flxdiv(   f .*TRIf,uf+UBG,wf+WBG,h,'FROMM','flx');         % advection/compaction
     
     Lpl_TRI   = (diff(TRI(:,ic),2,1)./h^2 + diff(TRI(ic,:),2,2)./h^2);     % diffusion
     
@@ -85,9 +128,9 @@ if step > 0
     
     res_TRI = (TRI-TRIo)./dt - (theta.*RTRI + (1-theta).*RTRIo);           % residual composition evolution equation
     
-    TRI     = TRI - res_TRI.*dt/10;                                        % update composition solution
+    TRI     = TRI - res_TRI.*dt;                                           % update composition solution
     
-    TRI([1 end],:) = TRIo([1 end],:);                                      % apply boundary conditions
+    TRI([1 end],:) = TRI(ibz,:);                                           % apply boundary conditions
     TRI(:,[1 end]) = TRI(:,ibx);
     res_TRI([1 end],:) = 0;
     res_TRI(:,[1 end]) = 0;
@@ -103,9 +146,9 @@ if step > 0
     
     res_TRC = (TRC-TRCo)./dt - (theta.*RTRC + (1-theta).*RTRCo);           % residual composition evolution equation
     
-    TRC     = TRC - res_TRC.*dt/10;                                        % update composition solution
+    TRC     = TRC - res_TRC.*dt;                                           % update composition solution
     
-    TRC([1 end],:) = TRCo([1 end],:);                                      % apply boundary conditions
+    TRC([1 end],:) = TRC(ibz,:);                                           % apply boundary conditions
     TRC(:,[1 end]) = TRC(:,ibx);
     res_TRC([1 end],:) = 0;
     res_TRC(:,[1 end]) = 0;
@@ -123,7 +166,7 @@ if step > 0
     
     res_IRP = (IRP-IRPo)./dt - (theta.*RIRP + (1-theta).*RIRPo);           % residual composition evolution equation
     
-    IRP     = IRP - res_IRP.*dt/10;                                        % update composition solution
+    IRP     = IRP - res_IRP.*dt;                                           % update composition solution
     
     IRP([1 end],:) = IRP(ibz,:);                                           % apply boundary conditions
     IRP(:,[1 end]) = IRP(:,ibx);
@@ -141,7 +184,7 @@ if step > 0
     
     res_IRD = (IRD-IRDo)./dt - (theta.*RIRD + (1-theta).*RIRDo);           % residual composition evolution equation
     
-    IRD     = IRD - res_IRD.*dt/10;                                        % update composition solution
+    IRD     = IRD - res_IRD.*dt;                                           % update composition solution
     
     IRD([1 end],:) = IRD(ibz,:);                                           % apply boundary conditions
     IRD(:,[1 end]) = IRD(:,ibx);
@@ -156,13 +199,13 @@ if step > 0
     
     Lpl_ISS  = (diff(ISS(:,ic),2,1)./h^2 + diff(ISS(ic,:),2,2)./h^2);      % diffusion
     
-    RctR_ISS = -(ISR-ISS).*RctR_f./max(flim,1-f);                         % reactive transfer rate
+    RctR_ISS = -(ISR-ISS).*RctR_f./max(flim,1-f);                          % reactive transfer rate
 
     RISS(ic,ic) = -V_GrdISS + Lpl_ISS/PeC + RctR_ISS(ic,ic);               % total rate of change
     
     res_ISS = (ISS-ISSo)./dt - (theta.*RISS + (1-theta).*RISSo);           % residual composition evolution equation
     
-    ISS     = ISS - res_ISS.*dt/10;                                        % update composition solution
+    ISS     = ISS - res_ISS.*dt;                                           % update composition solution
     
     ISS([1 end],:) = ISS(ibz,:);                                           % apply boundary conditions
     ISS(:,[1 end]) = ISS(:,ibx);    
@@ -181,11 +224,32 @@ if step > 0
     
     res_ISF = (ISF-ISFo)./dt - (theta.*RISF + (1-theta).*RISFo);           % residual composition evolution equation
     
-    ISF     = ISF - res_ISF.*dt/10;                                        % update composition solution
+    ISF     = ISF - res_ISF.*dt;                                           % update composition solution
     
     ISF([1 end],:) = ISF(ibz,:);                                           % apply boundary conditions
     ISF(:,[1 end]) = ISF(:,ibx);    
     res_ISF([1 end],:) = 0;
     res_ISF(:,[1 end]) = 0;
+    
+    
+    %*****  DAMAGE EVOLUTION  *************************************************
+    
+    epsDMG   = max(1e-16,eps-tau./10.^etav);                               % failure damage rate
+
+    V_GrdDMG = flxdiv(DMG,U+UBG,W+WBG,h,'FROMM','adv');                    % damage advection
+    
+    Lpl_DMG  = (diff(DMG(:,ic),2,1)./h^2 + diff(DMG(ic,:),2,2)./h^2);      % regularisation
+        
+    RDMG(ic,ic) = -V_GrdDMG + Lpl_DMG/PeC ...
+                + epsDMG(ic,ic) - RHEAL.*DMG(ic,ic);                       % total rate of change
+    
+    res_DMG = (DMG-DMGo)./dt - (theta.*RDMG + RDMGo);                      % residual damage evolution equation
+        
+    DMG = DMG - res_DMG.*dt;                                               % update composition solution
+    
+    DMG([1 end],:) = DMG(ibz,:);                                           % apply boundary conditions
+    DMG(:,[1 end]) = DMG(:,ibx);
+    res_DMG([1 end],:) = 0;
+    res_DMG(:,[1 end]) = 0;
     
 end

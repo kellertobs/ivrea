@@ -109,8 +109,13 @@ set(fh3, 'CurrentAxes', ax(2))
 imagesc(xc,zc,f(ic,ic)); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melt fraction $\phi$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
 set(fh3, 'CurrentAxes', ax(3))
-imagesc(xc,zc,RctR_f(ic,ic)); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melting Rate $\Gamma$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
+if Da>0
+    imagesc(xc,zc,RctR_f(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+    set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melting Rate $\Gamma$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
+else
+    imagesc(xc,zc,fq(ic,ic)-f(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+    set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Melt diseqilibrium $f^q-f$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
+end
 set(fh3, 'CurrentAxes', ax(4))
 imagesc(xc,zc,MAJ(ic,ic)); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Major elements $C_\mathrm{maj}$'],TX{:},FS{:});
@@ -199,13 +204,13 @@ if plot_cv
         imagesc(xc,zc,( dP./(1e-16+norm(P(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. pore pressure $P$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
         set(fh5, 'CurrentAxes', ax(4))
-        imagesc(xc,zc,(-res_T*(dt/10)./(1e-16+norm(T(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        imagesc(xc,zc,(-res_T*(dt)./(1e-16+norm(T(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. temperature $T$'],TX{:},FS{:});
         set(fh5, 'CurrentAxes', ax(5))
-        imagesc(xc,zc,(-res_MAJ*(dt/10)./(1e-16+norm(MAJ(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        imagesc(xc,zc,(-res_MAJ*(dt)./(1e-16+norm(MAJ(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. composition $C$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
         set(fh5, 'CurrentAxes', ax(6))
-        imagesc(xc,zc,(-res_f*(dt/10)./(1e-16+norm(f(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        imagesc(xc,zc,(-res_f*(dt)./(1e-16+norm(f(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. liquid fraction $\phi$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
         drawnow;
     end

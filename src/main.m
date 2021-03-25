@@ -59,7 +59,8 @@ else
     T   =  Tc-(T0-Tc).*erf((-Z)./D).*(1 + T1.*dr + T2.*gs); Tin = T;       % temperature
     MAJ =  MAJ0 .* (1 + MAJ1.*dr + MAJ2.*gs); MAJin = MAJ;                 % major elements
     [f,MAJsq,MAJfq] =  equilibrium(T ,MAJ ,perT,perCs,perCf,PhDg); fin = f;% melt fraction at equilibrium 
-    f0  =  equilibrium(T0,MAJ0,perT,perCs,perCf,PhDg);                     % melt fraction at T0, MAJ0
+    f0  =  equilibrium(T0,MAJ0,perT,perCs,perCf,PhDg); f0  =  max(f0,flim);% melt fraction at T0, MAJ0
+    fq  =  f;
 end
 fprintf('\n\n*****  initial condition: T0 = %1.3f;  C0 = %1.3f;  f0 = %1.3f;\n\n',T0,MAJ0,f0);
 
@@ -89,7 +90,8 @@ u      =  0.*U;    uf = U+u./((f(:,im)+f(:,ip))./2);
 w      =  0.*W;    wf = W+w./((f(im,:)+f(ip,:))./2);
 p      =  0.*P;
 Pt     =  Pc + P + p + 5*B*Z;
-DMG    =  0.1*(1+dr./10);  res_DMG = 0.*DMG;
+DMG    =  0.1*(1+dr);  res_DMG = 0.*DMG;
+plim   = double(f>=flim);
 
 % initialise parameter fields
 RctR_f =  0.*f;
@@ -176,9 +178,10 @@ while time < tend && step < M
     
     
     % non-linear iteration loop
-    startup = 2*double(step<=1) + double(step>0);
+    startup = 2*double(step<=1) + double(step>1);
     while resnorm/resnorm0 >= rtol/startup && resnorm >= atol && it <= maxit*startup || it <= minit
                 
+        
         % store previous iterative solution guess  
         Wi = W;
         Ui = U;
@@ -188,13 +191,13 @@ while time < tend && step < M
         % update rheology, coefficient, thermo-chemical evolution
         if ~mod(it,nup)
             up2date;
-            thermochem;
         end
         
         
         % update segregation velocities and compaction pressure
         w   = -10.^((K(im,:)+K(ip,:)).*0.5) .* (diff(P,1,1)./h + B);       % segregation z-velocity
         
+        w([1 end],:) = 0;
         w(:,[1 end]) = w(:,ibx);
                 
         u   = -10.^((K(:,im)+K(:,ip)).*0.5) .* (diff(P,1,2)./h);           % segregation x-velocity
@@ -212,7 +215,7 @@ while time < tend && step < M
             
         p  = -10.^zeta .* ups;                                             % compaction pressure
                 
-        p([1 end],:) = 0;                                                  % apply boundary conditions
+        p([1 end],:) = p(ibz,:);                                           % apply boundary conditions
         p(:,[1 end]) = p(:,ibx);
 
         Pt  = Pc + P + p + 5*B*Z;                                          % total aggregate pressure
@@ -243,7 +246,8 @@ while time < tend && step < M
         if bnchmrk; res_W = res_W - src_W_mms; end
         
         dW = -res_W.*dtW;
-                
+           
+        dW([1 end],:) = 0;
         dW(:,[1 end]) = dW(:,ibx);
         
         W = Wi + alpha*dW + beta*dWi;                                      % update z-velocity solution
@@ -265,13 +269,11 @@ while time < tend && step < M
         if abs(Si) > abs(Pu)
             dU(:,[1 end]) = [sum(dU(:,[1 end]),2)./2, ...
                              sum(dU(:,[1 end]),2)./2];
+            dU = dU-mean(dU(:));                                           % remove mean from update
         else
             dU(:,[1 end]) = 0;
-
         end
-        
-        dU = dU-mean(dU(:));                                               % remove mean from update
-        
+
         U = Ui + alpha*dU + beta*dUi;                                      % update x-velocity solution
       
         dUi = U - Ui;                                                      % store update step
@@ -295,7 +297,7 @@ while time < tend && step < M
         
         dP = -res_P.*dtP;
         
-        dP([1 end],:) = 0;                                                 % apply boundary conditions
+        dP([1 end],:) = dP(ibz,:);                                         % apply boundary conditions
         dP(:,[1 end]) = dP(:,ibx);
         
         dP = dP-mean(dP(:));                                               % remove mean from update
@@ -311,6 +313,11 @@ while time < tend && step < M
 
     end
     
+    
+    % update thermo-chemical evolution
+    thermochem; up2date;
+    
+        
     % print diagnostics
     fprintf(1,'\n         time to solution = %4.4f sec\n\n',toc);
 
