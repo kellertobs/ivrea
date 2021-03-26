@@ -17,7 +17,7 @@ elseif it >= 100 && it < 1000
 elseif it >= 1000 && it < 10000
     fprintf(1,'    ---  it =   %d;   abs res = %4.4e;   rel res = %4.4e \n',it,resnorm,resnorm/resnorm0);
 elseif it >= 10000
-    fprintf(1,'    ---  it =  %d;   abs res = %4.4e;   rel res = %4.4e;   err = %4.4e \n',it,resnorm,resnorm/resnorm0);
+    fprintf(1,'    ---  it =  %d;   abs res = %4.4e;   rel res = %4.4e; \n',it,resnorm,resnorm/resnorm0);
 end 
 
 if any(isnan([U(:);W(:);P(:);f(:)]))
