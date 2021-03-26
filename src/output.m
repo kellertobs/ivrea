@@ -79,8 +79,8 @@ set(fh2, 'CurrentAxes', ax(4))
 imagesc(xc,zc,      eta(ic,ic) ); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ shear viscosity $\eta$'],TX{:},FS{:});
 set(fh2, 'CurrentAxes', ax(5))
-imagesc(xc,zc,     zeta(ic,ic) ); axis ij equal tight; box on; cb = colorbar;
-set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ comp. viscosity $\zeta$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
+imagesc(xc,zc,log10(DMG(ic,ic))); axis ij equal tight; box on; cb = colorbar;
+set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ plastic damage $\varepsilon_p$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
 set(fh2, 'CurrentAxes', ax(6))
 imagesc(xc,zc,log10(tau(ic,ic))); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ shear stress $\tau$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
