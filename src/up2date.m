@@ -13,14 +13,14 @@ tau(:,[1 end]) = tau(:,ibx);
 
 
 plimi = double(f>=flim);
-for k  = 1:ceil(4*kappa)                                                   % regularisation
-    kk = 4*kappa/ceil(4*kappa);
+for k  = 1:10                                                   % regularisation
+    kk = 1;
     plimi(ic,ic) = plimi(ic,ic) + kk.*(diff(plimi(ic,:),2,2)+diff(plimi(:,ic),2,1))./8;
     plimi([1 end],:) = plimi(ibz,:);
     plimi(:,[1 end]) = plimi(:,ibx);
 end
-plim  = min(1,2.*plimi);
-% plim  = gamma.*plim + (1-gamma).*plimi;
+plimi = min(1,2.*plimi);
+plim  = gamma.*plim + (1-gamma).*plimi;
 
 Pe = p.*plim + Pt.*(1-plim);
 yieldt_GM = max(1e-16, 1 + Pe  );
