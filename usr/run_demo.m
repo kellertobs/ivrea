@@ -28,7 +28,7 @@ n        =  0.75;                % non-Newtonian shear viscosity powerlaw
 lambda   =  30;                  % exponential melt weakening factor
 Es       =  10;                  % matrix viscosity activation energy
 Ef       =  5;                   % melt viscosity activation energy
-RHEAL    =  1;                   % damage healing rate
+RHEAL    =  10;                  % damage healing rate
 KDMG     =  10;                  % damage permeability enhancement factor
 YDMG     =  0.2;                 % damage yield stress reduction factor
 Pc       =  20;                  % deep crustal pressure (top boundary)
@@ -94,12 +94,12 @@ rtol     =  1e-6;                % outer its relative tolerance
 atol     =  1e-6;                % outer its absolute tolerance
 minit    =  500;                 % minimum solver iterations
 maxit    =  5e3;                 % maximum solver iterations
-alpha    =  0.95;                % inner its step size (fraction of stable step) [0,1]
-beta     =  0.80;                % iterative damping parameter (fraction of previous step) [0,1]
+alpha    =  0.25;                % inner its step size (fraction of stable step) [0,1]
+beta     =  0.75;                % iterative damping parameter (fraction of previous step) [0,1]
 gamma    =  0.99;                % iterative relaxation for rheology updates [0,1]
-kappa    =  2.00;                % regularisation of eIIvp for failure [0,1]
+kappa    =  1.00;                % regularisation of eIIvp for failure [0,1]
 etamin   =  1e-2;                % minimum viscosity for regularisation
-etamax   =  1e+4;                % maximum viscosity for stability
+etamax   =  1e+3;                % maximum viscosity for stability
 flim     =  1e-3;                % limit melt fraction in coefficients for stability
 
 % create output directory
