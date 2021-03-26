@@ -7,13 +7,6 @@ if step > 0
     % update equilibrium
     [fq,MAJsq,MAJfq]  =  equilibrium(T,MAJ,perT,perCs,perCf,PhDg);
     RctR_f = min(Da,1/(2*dt)).*(fq-f);
-    %     for k  = 1:ceil(kappa)                                                 % regularisation
-    %         kk = kappa/ceil(kappa);
-    %         RctR_fi(ic,ic) = RctR_fi(ic,ic) + kk.*(diff(RctR_fi(ic,:),2,2)+diff(RctR_fi(:,ic),2,1))./8;
-    %         RctR_fi([1 end],:) = RctR_fi(ibz,:);
-    %         RctR_fi(:,[1 end]) = RctR_fi(:,ibx);
-    %     end
-    %     RctR_f = (1-gamma).*RctR_fi + gamma*RctR_f;
     
     % update phase major element composition
     KMAJq = MAJsq./MAJfq;
@@ -63,7 +56,7 @@ if step > 0
 
     Lpl_f  = (diff(f(:,ic),2,1)./h^2 + diff(f(ic,:),2,2)./h^2);            % diffusion
     
-    Rf(ic,ic) =  Div_fV + Lpl_f/PeC + RctR_f(ic,ic);                       % total rate of change
+    Rf(ic,ic) =  Div_fV + RctR_f(ic,ic);                                   % total rate of change
     
     res_f = (f-fo)./dt - (theta.*Rf + (1-theta).*Rfo);                     % residual phase evolution equation
     
