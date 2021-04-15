@@ -19,8 +19,8 @@ for k  = 1:10                                                   % regularisation
     plimi([1 end],:) = plimi(ibz,:);
     plimi(:,[1 end]) = plimi(:,ibx);
 end
-plimi = min(1,2.*plimi);
-plim  = gamma.*plim + (1-gamma).*plimi;
+plim  = min(1,2.*plimi);
+% plim  = gamma.*plim + (1-gamma).*plimi;
 
 Pe = p.*plim + Pt.*(1-plim);
 yieldt_GM = max(1e-16, 1 + Pe  );
