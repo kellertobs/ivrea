@@ -33,7 +33,6 @@ x     = -L/2-h/2:h:L/2+h/2;
 xc    = (x(im)+x(ip))./2;
 zc    = (z(im)+z(ip))./2;
 [X,Z] = meshgrid(x,z);
-Xbnd = X; Zbnd = Z;
 
 % set gaussian perturbation shape function
 gs   = exp(-(X+xpos).^2./wx^2).*exp(-(Z+zpos).^2./wz^2);

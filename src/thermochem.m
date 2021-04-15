@@ -56,7 +56,9 @@ if step > 0
 
     Lpl_f  = (diff(f(:,ic),2,1)./h^2 + diff(f(ic,:),2,2)./h^2);            % diffusion
     
-    Rf(ic,ic) =  Div_fV + RctR_f(ic,ic);                                   % total rate of change
+    Rfin    = (fin-f)./(5*dt) .* exp(-(L-Z)./(5*h));                       % base injection rate
+    
+    Rf(ic,ic) =  Div_fV + RctR_f(ic,ic) + Rfin(ic,ic);                     % total rate of change
     
     res_f = (f-fo)./dt - (theta.*Rf + (1-theta).*Rfo);                     % residual phase evolution equation
     
@@ -77,7 +79,9 @@ if step > 0
     
     Lpl_T  = (diff(T(:,ic),2,1)./h^2 + diff(T(ic,:),2,2)./h^2);            % diffusion
     
-    RT(ic,ic) = -V_GrdT + Lpl_T/PeT - RctR_f(ic,ic)/St;                    % total rate of change
+    RTin    = (Tin-T)./(5*dt) .* exp(-(L-Z)./(5*h));                       % base injection rate
+
+    RT(ic,ic) = -V_GrdT + Lpl_T/PeT - RctR_f(ic,ic)/St + RTin(ic,ic);      % total rate of change
     
     res_T = (T-To)./dt - (theta.*RT + (1-theta).*RTo);                     % residual temperature evolution equation
     
@@ -95,7 +99,9 @@ if step > 0
     
     Lpl_MAJ   = (diff(MAJ(:,ic),2,1)./h^2 + diff(MAJ(ic,:),2,2)./h^2);     % diffusion
     
-    RMAJ(ic,ic) = -Div_fMAJV + Lpl_MAJ/PeC;                                % total rate of change
+    RMAJin    = (MAJin-MAJ)./(5*dt) .* exp(-(L-Z)./(5*h));                 % base injection rate
+
+    RMAJ(ic,ic) = -Div_fMAJV + Lpl_MAJ/PeC + RMAJin(ic,ic);                % total rate of change
     
     res_MAJ = (MAJ-MAJo)./dt - (theta.*RMAJ + (1-theta).*RMAJo);           % residual composition evolution equation
     
@@ -239,6 +245,7 @@ if step > 0
     res_DMG = (DMG-DMGo)./dt - (theta.*RDMG + RDMGo);                      % residual damage evolution equation
         
     DMG = DMG - res_DMG.*dt;                                               % update composition solution
+    DMG = max(1e-16,min(1-1e-16,DMG));
     
     DMG([1 end],:) = DMG(ibz,:);                                           % apply boundary conditions
     DMG(:,[1 end]) = DMG(:,ibx);
