@@ -1,9 +1,9 @@
 clear; close all;                % #ok<*NASGU> 
 
 % set run parameters
-runID    = 'demo';               % run identifier
+runID    = 'demo3';              % run identifier
 restart  =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nop      =  10;                  % output frame plotted/saved every 'nop' time steps
+nop      =  20;                  % output frame plotted/saved every 'nop' time steps
 plot_op  =  1;                   % switch on (1) to display results
 save_op  =  1;                   % switch on (1) to save output to file
 plot_cv  =  1;                   % switch on (1) to live plot iterative convergence
@@ -11,7 +11,7 @@ bnchmrk  =  0;                   % switch on (1) to run manufactured solution be
 
 % set model domain parameters
 L        =  40;                  % domain dimension
-N        =  200 + 2;             % number of grid points in z-direction (incl. 2 ghosts)
+N        =  400 + 2;             % number of grid points in z-direction (incl. 2 ghosts)
 h        =  L/(N-2);             % grid spacing
 
 % set model timing parameters
@@ -19,9 +19,9 @@ M        =  1e5;                 % number of time steps to take
 tend     =  1e5;                 % end time for simulation [s]
 
 % stress control parameters
-Pu       =  -1/10;                % ratio of pure-shear stress to buoyancy pressure
+Pu       = -1/20;                % ratio of pure-shear stress to buoyancy pressure
 Si       =  0;                   % ratio of simple-shear stress to buoyancy pressure
-B        =   1/2;                % ratio of buoyancy pressure to tensile strength
+B        =  1/2;                 % ratio of buoyancy pressure to tensile strength
 
 % set model rheology parameters
 n        =  0.75;                % non-Newtonian shear viscosity powerlaw
@@ -38,12 +38,12 @@ Tc       =  0.20;                % deep crustal temperature (top boundary)
 T0       =  0.50;                % initial temperature
 T1       =  0.00;                % amplitude of random noise   
 T2       =  0.01;                % amplitude of gaussian
-D        =  0.3*L;               % thermal boundary layer thickness
+D        =  0.4*L;               % thermal boundary layer thickness
 PeT      =  1.0;                 % thermal Peclet number [u0.h0/kappaT0]
 PeC      =  100;                 % major element Peclet number [u0.h0/Dc0]
 St       =  3.0;                 % Stefan number [cp0.dT0/L0]
 MAJ0     =  0.10;                % initial major element composition
-MAJ1     =  0.025;               % amplitude of random noise   
+MAJ1     =  0.05;                % amplitude of random noise   
 MAJ2     = -0.0;                 % amplitude of gaussian
 Da       =  100;                 % Dahmköhler number [t0/tr0]
 PhDg     =  4.0;                 % Phase diagram scaling factor (> 1)
@@ -94,8 +94,8 @@ rtol     =  1e-6;                % outer its relative tolerance
 atol     =  1e-6;                % outer its absolute tolerance
 minit    =  500;                 % minimum solver iterations
 maxit    =  5e3;                 % maximum solver iterations
-alpha    =  0.25;                % inner its step size (fraction of stable step) [0,1]
-beta     =  0.75;                % iterative damping parameter (fraction of previous step) [0,1]
+alpha    =  0.95;                % inner its step size (fraction of stable step) [0,1]
+beta     =  0.80;                % iterative damping parameter (fraction of previous step) [0,1]
 gamma    =  0.99;                % iterative relaxation for rheology updates [0,1]
 kappa    =  1.00;                % regularisation of eIIvp for failure [0,1]
 etamin   =  1e-2;                % minimum viscosity for regularisation
