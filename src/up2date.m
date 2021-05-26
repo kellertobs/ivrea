@@ -11,24 +11,26 @@ tau(ic,ic) = (  (txx(ic,ic).^2 + tzz(ic,ic).^2 ...
 tau([1 end],:) = tau(ibz,:);                                               % periodic boundaries
 tau(:,[1 end]) = tau(:,ibx);
 
-
-plimi = double(f>=flim);
-for k  = 1:10                                                   % regularisation
+% update yield stress
+twophs = double(f>=flim);
+for k  = 1:5                                                   % regularisation
     kk = 1;
-    plimi(ic,ic) = plimi(ic,ic) + kk.*(diff(plimi(ic,:),2,2)+diff(plimi(:,ic),2,1))./8;
-    plimi([1 end],:) = plimi(ibz,:);
-    plimi(:,[1 end]) = plimi(:,ibx);
+    twophs(ic,ic) = twophs(ic,ic) + kk.*(diff(twophs(ic,:),2,2)+diff(twophs(:,ic),2,1))./8;
+    twophs([1 end],:) = twophs(ibz,:);
+    twophs(:,[1 end]) = twophs(:,ibx);
 end
-plim  = min(1,2.*plimi);
-% plim  = gamma.*plim + (1-gamma).*plimi;
+twophs  = min(1,2.*twophs);
 
-Pe = p.*plim + Pt.*(1-plim);
-yieldt_GM = max(1e-16, 1 + Pe  );
-yieldt_MC = max(1e-16, 2 + Pe/2);
+Pe = p.*twophs + Pt.*(1-twophs);
+yieldt_GM = max(1e-16, 1*Ty + Pe  );
+yieldt_MC = max(1e-16, 2*Ty + Pe/2);
 yieldt    = min(yieldt_GM,yieldt_MC) .* YDMG.^DMG + etamin.*eps + bnchmrk*10;
 
-% update rheological parameters
-etav  = exp(Es*(1./T-1./T0) -lambda.*(f-f0)) .* (1/2+1/2*(eps./eps0).^-n); 
+yieldp    = min(-1e-16, -1*Ty + tau  );
+yieldp    = yieldp .* YDMG.^DMG;
+
+% update viscosities
+etav  = exp(Es*(1./T-1./T0) - lambda.*f) .* (1/2+1/2*(eps./eps0).^-n) .* EMAJ.^MAJ; 
 etav  = (1./etamax + 1./etav).^-1 + etamin;
 etav  = log10(etav);
 etav([1 end],:) = etav(ibz,:);
@@ -37,8 +39,10 @@ etav(:,[1 end]) = etav(:,ibx);
 etay  =  log10(yieldt)-log10(eps);                                         % shear visco-plasticity
 etay  =  min(etav,etay);
 
-limf  =  max(flim,min(1-flim,f));
-zetay =  etay - log10(limf.*(1-limf).^0.5);
+% zetay =  etay - log10(f .* (1-f).^0.5);
+zetav = etay - log10(f .* (1-f).^0.5);
+zetay = log10(-yieldp)-log10(max(1e-16,ups));                              % compaction visco-plasticity
+zetay = twophs.*min(zetav,zetay) + (1-twophs).*zetav;
 
 for k  = 1:ceil(kappa)                                                     % regularisation
     kk = kappa/ceil(kappa);
@@ -59,8 +63,20 @@ zeta  =  zetay.*(1-gamma) + zeta.*gamma;                                   % eff
 
 etac  = (eta(im,im)+eta(ip,im) + eta(im,ip)+eta(ip,ip)).*0.25;             % interpolate to cell corners
 
-limf  = plim.*limf + (1-plim).*f;
-K     = log10((limf/f0).^3 .* (1-limf).^1.5 .* exp(-Ef*(1./T-1./T0))) + KDMG.*DMG;  % segregation coefficient
+% update segregation coefficient
+K  = (f/f0).^3 .* (1-f).^2 .* exp(-Ef*(1./T-1./T0)) .* KDMG.^DMG;  % segregation coefficient
+K  = 1./(1./K + 1e-3);
+K  = log10(K);
+
+for k  = 1:ceil(kappa)                                                     % regularisation
+    kk = kappa/ceil(kappa);
+    K(ic,ic) = K(ic,ic) + kk.*(diff(K(ic,:),2,2)+diff(K(:,ic),2,1))./8;
+    K([1 end],:) = K(ibz,:);
+    K(:,[1 end]) = K(:,ibx);
+end
+
+zeta = min(log10(1/flim),zeta);
+K    = max(log10((flim/f0)^3),K);
 
 % update iterative and physical time step sizes
 dtW = (10.^(( eta(im,:)+ eta(ip,:)).*0.5)./(h/2)^2 ...
