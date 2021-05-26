@@ -66,7 +66,7 @@ ax(5) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
 ax(6) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
 
 set(fh2, 'CurrentAxes', ax(1))
-imagesc(xc,zc,max(-3, K(ic,ic))); axis ij equal tight; box on; cb = colorbar;
+imagesc(xc,zc,max(-6, K(ic,ic))); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ Darcy coefficient $K$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
 text(0,0.9*L,['time ',num2str(time,4)],TX{:},FS{:},'HorizontalAlignment','center','VerticalAlignment','middle')
 set(fh2, 'CurrentAxes', ax(2))
@@ -79,7 +79,7 @@ set(fh2, 'CurrentAxes', ax(4))
 imagesc(xc,zc,      eta(ic,ic) ); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ shear viscosity $\eta$'],TX{:},FS{:});
 set(fh2, 'CurrentAxes', ax(5))
-imagesc(xc,zc,log10(DMG(ic,ic))); axis ij equal tight; box on; cb = colorbar;
+imagesc(xc,zc,max(-6,log10(DMG(ic,ic)))); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ plastic damage $\varepsilon_p$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
 set(fh2, 'CurrentAxes', ax(6))
 imagesc(xc,zc,log10(tau(ic,ic))); axis ij equal tight; box on; cb = colorbar;
@@ -102,7 +102,7 @@ ax(5) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
 ax(6) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
 
 set(fh3, 'CurrentAxes', ax(1))
-imagesc(xc,zc,T(ic,ic)); axis ij equal tight; box on; cb = colorbar;
+imagesc(xc,zc,T(ic,ic)-0.*mean(T(ic,ic),2)); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['Temperature $T$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
 text(0,0.9*L,['time ',num2str(time,4)],TX{:},FS{:},'HorizontalAlignment','center','VerticalAlignment','middle')
 set(fh3, 'CurrentAxes', ax(2))
@@ -195,13 +195,13 @@ if plot_cv
         drawnow;
     else
         set(fh5, 'CurrentAxes', ax(1))
-        imagesc(xc,zc,(-dW./(1e-16+norm(W(:)+WBG(:),2)./N))); axis ij equal tight; box on; cb = colorbar;
+        imagesc(xc,zc,( FW./(1e-16+norm(W(:)+WBG(:),2)./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. matrix z-velocity $W$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
         set(fh5, 'CurrentAxes', ax(2))
-        imagesc(xc,zc,( dU./(1e-16+norm(W(:)+WBG(:),2)./N))); axis ij equal tight; box on; cb = colorbar;
+        imagesc(xc,zc,(-FU./(1e-16+norm(W(:)+WBG(:),2)./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. matrix x-velocity $U$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
         set(fh5, 'CurrentAxes', ax(3))
-        imagesc(xc,zc,( dP./(1e-16+norm(P(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
+        imagesc(xc,zc,(-FP./(1e-16+norm(P(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['res. pore pressure $P$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
         set(fh5, 'CurrentAxes', ax(4))
         imagesc(xc,zc,(-res_T*(dt)./(1e-16+norm(T(:),2)       ./N))); axis ij equal tight; box on; cb = colorbar;
@@ -219,7 +219,7 @@ if plot_cv
         figure(6); clf;
         pp = linspace(-1,max(Pe(:)),1e3);
         
-        plot(pp,eps0.*ones(size(pp)),'k',pp,min(1+pp,2+pp/2),'r',Pe(:),yieldt(:),'r.','LineWidth',2); axis equal tight; box on; hold on;
+        plot(pp,eps0.*ones(size(pp)),'k',pp,min(Ty+pp,2*Ty+pp/2),'r',Pe(:),yieldt(:),'r.','LineWidth',2); axis equal tight; box on; hold on;
         scatter(Pe(:),tau(:),20,(eta(:)),'filled'); colorbar; colormap(ocean);
         
         set(gca,'TickLabelInterpreter','latex','FontSize',15)
@@ -228,9 +228,9 @@ if plot_cv
         ylabel('Dev. Stress Magnitude','Interpreter','latex','FontSize',18)
         drawnow;
         
-        figure(7); clf;
+        fh7 = figure(7); clf;
         TT = linspace(0,1,1e3);
-        [~,CCS,CCf] = equilibrium(TT,0.*TT,perT,perCs,perCf,PhDg);
+        [~,CCS,CCf] = equilibrium(TT,0.*TT,0.*TT,perT,perCs,perCf,clap,PhDg);
         
         plot(CCS,TT,'k-','LineWidth',2); axis tight; hold on; box on;
         plot(CCf,TT,'k-','LineWidth',2);
@@ -240,7 +240,7 @@ if plot_cv
         plot([perCs,perCf],[perT,perT],'k-','LineWidth',1)
         plot([perCs,perCs],[-perT/2,perT],'k-','LineWidth',1.5)
 
-        plot(MAJ,T,'k.',MAJs,T,'b.',MAJf,T,'r.','LineWidth',2,'MarkerSize',20);
+        plot(MAJ,T-Pt*clap,'k.',MAJs,T-Pt*clap,'b.',MAJf,T-Pt*clap,'r.','LineWidth',2,'MarkerSize',20);
 
         set(gca,'XTick',[0:0.2:1],'YTick',[0:0.2:1],'TickLabelInterpreter','latex','FontSize',15)
         text(perCs/2,(perT-perT/2)/2,'sol 1 + sol 2','Interpreter','latex','FontSize',18,'HorizontalAlignment','center','VerticalAlignment','middle')
@@ -257,7 +257,7 @@ end
 % save output frame
 if save_op
     % clean workspace
-    clear Wi Ui Pi dWi dUi dPi Rfo RTo RMAJo RTRIo RTRCo RIRPo RIRDo RISSo RISFo Div_tz Div_tx dtW dtU dtP etac yield_GM yield_MC
+    clear Wi Ui Pi dWi dUi dPi Rfo RTo RMAJo RTRIo RTRCo RIRPo RIRDo RISSo RISFo Div_tz Div_tx dtW dtU dtP yield_GM yield_MC
     clear ax cb fw axw axh avs ahs axl axr axt axb fh fw TX TL FS TS UN p0 Vel k kk pp CCs CCf TT
     clear Div_fV V_GrdT Div_fMAJV Div_fTRIV DIV_fTRCV Div_fIRPV Div_fIRDV V_GrdISS V_GrdISF V_GrdDMG
     clear Lpl_f Lpl_T Lpl_MAJ Lpl_TRI Lpl_TRC Lpl_IRP Lpl_IRD Lpl_ISS Lpl_ISF Lpl_DMG
@@ -270,8 +270,12 @@ if save_op
     print(fh3,name,'-dpng','-r300');
     name = ['../out/',runID,'/',runID,'_sis_',num2str(frame)];
     print(fh4,name,'-dpng','-r300');
+    if ~bnchmrk
+        name = ['../out/',runID,'/',runID,'_phs_',num2str(frame)];
+        print(fh7,name,'-dpng','-r300');
+    end
     
-    clear fh1 fh2 fh3 fh4 fh5;
+    clear fh1 fh2 fh3 fh4 fh5 fh7;
 
     name = ['../out/',runID,'/',runID,'_cont'];
     save([name,'.mat']);
