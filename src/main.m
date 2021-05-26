@@ -27,6 +27,14 @@ for i = 1:max(smx,smz)
     dr(:,[1 end]) = 0;
 end
 
+% get mapping arrays
+NP =  N   * N  ;
+NW = (N-1)* N  ;
+NU =  N  *(N-1);
+MapP = reshape(1:NP,N  ,N  );
+MapW = reshape(1:NW,N-1,N  );
+MapU = reshape(1:NU,N  ,N-1) + NW;
+
 % get coordinate arrays
 z     = -0  -h/2:h:L  +h/2;
 x     = -L/2-h/2:h:L/2+h/2;
@@ -55,11 +63,12 @@ if bnchmrk
     T   = T_mms;
     MAJ = C_mms;
 else
-    T   =  Tc-(T0-Tc).*erf((-Z)./D).*(1 + T1.*dr + T2.*gs); Tin = T;       % temperature
-    MAJ =  MAJ0 .* (1 + MAJ1.*dr + MAJ2.*gs); MAJin = MAJ;                 % major elements
-    [f,MAJsq,MAJfq] =  equilibrium(T ,MAJ ,perT,perCs,perCf,PhDg); fin = f;% melt fraction at equilibrium 
-    f0  =  equilibrium(T0,MAJ0,perT,perCs,perCf,PhDg); f0  =  max(f0,flim);% melt fraction at T0, MAJ0
-    fq  =  f;
+    T   =  Tc-(T0-Tc).*erf((-Z)./D).*(1 + T1.*dr) + T2.*gs; Tin = T;       % temperature
+    MAJ =  MAJ0 .* (1 + MAJ1.*dr) + MAJ2.*gs; MAJin = MAJ;                 % major elements
+    Pt  =  Pc + 5*Z;                                                       % lithostatic pressure
+    [fq,MAJsq,MAJfq] = equilibrium(T ,MAJ ,Pt,perT,perCs,perCf,clap,PhDg); % melt fraction at equilibrium 
+    f0  =  max(flim,mean(fq(fq(:)>flim)));
+    f   =  fq;  fin = fq;
 end
 fprintf('\n\n*****  initial condition: T0 = %1.3f;  C0 = %1.3f;  f0 = %1.3f;\n\n',T0,MAJ0,f0);
 
@@ -82,15 +91,16 @@ res_T   = 0.*T;
 res_MAJ = 0.*MAJ;
 
 % initialise mechanical solution and residual fields
-W      =  0.*WBG;  res_W = 0.*W;  dW = 0.*W;
-U      =  0.*UBG;  res_U = 0.*U;  dU = 0.*U;
-P      =  0.*f;    res_P = 0.*P;  dP = 0.*P;
-u      =  0.*U;    uf = U+u./((f(:,im)+f(:,ip))./2);
-w      =  0.*W;    wf = W+w./((f(im,:)+f(ip,:))./2);
-p      =  0.*P;
-Pt     =  Pc + P + p + 5*B*Z;
-DMG    =  0.1*(1+dr);  res_DMG = 0.*DMG;
-plim   = double(f>=flim);
+W  =  1.*WBG;  FW = 0.*W;
+U  =  1.*UBG;  FU = 0.*U;
+P  =  0.*f;    FP = 0.*P;
+u  =  0.*U;    Fu = u;
+w  =  0.*W;    Fw = w;
+p  =  0.*P;    Fp = p;
+S  = [W(:);U(:);w(:);u(:);P(:);p(:)];
+wf = W+w./max(flim,(f(im,:)+f(ip,:))./2);
+uf = U+u./max(flim,(f(:,im)+f(:,ip))./2);
+DMG  = DMG0*(1+dr);  res_DMG = 0.*DMG;
 
 % initialise parameter fields
 RctR_f =  0.*f;
@@ -106,12 +116,15 @@ RISF   =  0.*ISF;
 RDMG   =  0.*DMG;
 ISR    =  ISS;
 ups    =  0.*P;  upss = 0.*P;  Div_fV = 0.*P;
-eps0   =  max(B/L,abs(Pu) + abs(Si)) + 1e-16;  
+eps0   =  max(1/L,abs(Pu) + abs(Si)) + 1e-16;  
 exx    =  0.*P - Pu;  ezz = 0.*P + Pu;  exz = zeros(N-1,N-1) - Si;  eps = 0.*P + (abs(Pu) + abs(Si));  
 txx    =  0.*exx;  tzz = 0.*ezz;  txz = 0.*exz;  tau = 0.*eps;
-eta    =  0.*P;
-zeta   =  eta - log10(f0);
-K      =  log10((f/f0).^3);
+eta    =  exp(Es*(1./T-1./T0) - lambda.*f) .* EMAJ.^MAJ; 
+eta    =  (1./etamax + 1./eta).^-1 + etamin;
+eta    =  log10(eta);
+etay   =  eta;
+zeta   =  min(log10(1/flim),eta - log10(f.*(1-f).^0.5));
+K      =  max(log10((flim/f0)^3),log10((f/f0).^3 .* (1-f).^2 .* exp(-Ef*(1./T-1./T0))) + KDMG.*DMG);  % segregation coefficient
 yieldt =  ones(size(P));
 rctr   =  ones(size(MAJ));
 
@@ -170,153 +183,24 @@ while time < tend && step < M
     resnorm0 = resnorm;
     it       = 0;
     
-    % initialise iterative solution guess
-    dWi = 0.*W;
-    dUi = 0.*U;
-    dPi = 0.*P;
-    
-    
     % non-linear iteration loop
     startup = 2*double(step<=1) + double(step>1);
-    while resnorm/resnorm0 >= rtol/startup && resnorm >= atol && it <= maxit*startup || it <= minit
-                
+    while resnorm/resnorm0 >= rtol/startup && resnorm >= atol && it < maxit*startup || it < minit
         
-        % store previous iterative solution guess  
-        Wi = W;
-        Ui = U;
-        Pi = P;
-        
-        
-        % update rheology, coefficient, thermo-chemical evolution
-        if ~mod(it,nup)
-            up2date;
-        end
-        
-        
-        % update segregation velocities and compaction pressure
-        w   = -10.^((K(im,:)+K(ip,:)).*0.5) .* (diff(P,1,1)./h + B);       % segregation z-velocity
-        
-        w([1 end],:) = 0;
-        w(:,[1 end]) = w(:,ibx);
-                
-        u   = -10.^((K(:,im)+K(:,ip)).*0.5) .* (diff(P,1,2)./h);           % segregation x-velocity
-        
-        u([1 end],:) = u(ibz,:);                                           % apply boundary conditions
-        if abs(Si) > abs(Pu)
-            u(:,[1 end]) = [sum(u(:,[1 end]),2)./2, ...
-                            sum(u(:,[1 end]),2)./2];
-        else
-            u(:,[1 end]) = 0;
-        end
-                
-        uf = U+u./max(flim,(f(:,im)+f(:,ip))./2);                          % get fluid x-velocity      
-        wf = W+w./max(flim,(f(im,:)+f(ip,:))./2);                          % get fluid z-velocity
-            
-        p  = -10.^zeta .* ups;                                             % compaction pressure
-                
-        p([1 end],:) = p(ibz,:);                                           % apply boundary conditions
-        p(:,[1 end]) = p(:,ibx);
-
-        Pt  = Pc + P + p + 5*B*Z;                                          % total aggregate pressure
-        
-        
-        % update strain rates
-        exx(:,ic)        = diff(U,1,2)./h - ups(:,ic)./3 - Pu;             % x-normal strain rate
-        exx([1 end],:)   = exx(ibz,:);                                     % apply boundary conditions
-        exx(:,[1 end])   = exx(:,ibx);               
-        ezz(ic,:)        = diff(W,1,1)./h - ups(ic,:)./3 + Pu;             % z-normal strain rate
-        ezz([1 end],:)   = ezz(ibz,:);                                     % apply boundary conditions
-        ezz(:,[1 end])   = ezz(:,ibx);          
-        exz              = 1/2.*(diff(U,1,1)./h+diff(W,1,2)./h) - Si;      % shear strain rate
-        
-        % update stresses
-        txx = 10.^eta .* exx;                                              % x-normal stress
-        tzz = 10.^eta .* ezz;                                              % z-normal stress
-        txz = 10.^etac.* exz;                                              % xz-shear stress  
-        
-        
-        % update z-reference velocity
-        Div_tz = diff(tzz(:,ic),1,1)./h + diff(txz,1,2)./h;                % z-stress divergence
-        
-        res_W(:,ic) = - Div_tz + diff(P(:,ic),1,1)./h ...                  % residual z-momentum equation
-                               + diff(p(:,ic),1,1)./h ... 
-                               + ((f(im,ic)+f(ip,ic))./2-f0).*B;
-                                
-        if bnchmrk; res_W = res_W - src_W_mms; end
-        
-        dW = -res_W.*dtW;
-           
-        dW([1 end],:) = 0;
-        dW(:,[1 end]) = dW(:,ibx);
-        
-        W = Wi + alpha*dW + beta*dWi;                                      % update z-velocity solution
-
-        dWi = W - Wi;                                                      % store update step
-        
-        
-        % update x-reference velocity        
-        Div_tx  = diff(txx(ic,:),1,2)./h + diff(txz,1,1)./h;               % x-stress divergence
-        
-        res_U(ic,:) = - Div_tx + diff(P(ic,:),1,2)./h ...                  % residual x-momentum equation
-                               + diff(p(ic,:),1,2)./h;
-                                
-        if bnchmrk; res_U = res_U - src_U_mms; end
-        
-        dU = -res_U.*dtU;
-        
-        dU([1 end],:) = dU(ibz,:);                                         % apply boundary conditions
-        if abs(Si) > abs(Pu)
-            dU(:,[1 end]) = [sum(dU(:,[1 end]),2)./2, ...
-                             sum(dU(:,[1 end]),2)./2];
-            dU = dU-mean(dU(:));                                           % remove mean from update
-        else
-            dU(:,[1 end]) = 0;
-        end
-
-        U = Ui + alpha*dU + beta*dUi;                                      % update x-velocity solution
-      
-        dUi = U - Ui;                                                      % store update step
-
-        
-        % update velocity divergences
-        ups(ic,ic) = diff(U(ic,:),1,2)./h + diff(W(:,ic),1,1)./h;          % matrix velocity divergence
-                             
-        ups([1 end],:) = ups(ibz,:);                                       % apply boundary conditions
-        ups(:,[1 end]) = ups(:,ibx);
-        
-        upss(ic,ic) = diff(u(ic,:),1,2)./h + diff(w(:,ic),1,1)./h;         % segregation velocity divergence
-        upss([1 end],:) = upss(ibz,:);                                     % apply boundary conditions    
-        upss(:,[1 end]) = upss(:,ibx);          
-        
-        
-        % update reference pressure
-        res_P = ups + upss;                                                % residual mass equation
-        
-        if bnchmrk; res_P = res_P - src_P_mms; end
-        
-        dP = -res_P.*dtP;
-        
-        dP([1 end],:) = dP(ibz,:);                                         % apply boundary conditions
-        dP(:,[1 end]) = dP(:,ibx);
-        
-        dP = dP-mean(dP(:));                                               % remove mean from update
-            
-        P = Pi + alpha*dP + beta*dPi;                                      % update pressure solution
-
-        dPi = P - Pi;                                                      % store update step
-        
-        % check and report convergence every max(100,nup) iterations
-        if it>0 && ~mod(it,max(100,nup)); report; end
-        
+        % increment iteration count
         it = it+1;
-
-    end
-    
-    
-    % update thermo-chemical evolution
-    thermochem; up2date;
-    
         
+        % update nonlinear coefficients & auxiliary fields
+        up2date;
+        
+        % update thermo-chemical evolution
+        thermochem; 
+        
+        % solve fluid-mechanics equations
+        fluidmech;
+        
+    end
+            
     % print diagnostics
     fprintf(1,'\n         time to solution = %4.4f sec\n\n',toc);
 
@@ -329,8 +213,8 @@ while time < tend && step < M
     fprintf(1,'         min p    = %s%4.4f;   mean p    = %s%4.4f;   max p    = %s%4.4f;\n\n',int8(min(  p(:))<0),min(  p(:)),int8(mean(  p(:))<0),mean(  p(:)),int8(max(  f(:))<0),max(  p(:)));
     
     fprintf(1,'         min f    = %s%4.4f;   mean f    = %s%4.4f;   max f    = %s%4.4f;\n'  ,int8(min(  f(:))<0),min(  f(:)),int8(mean(  f(:))<0),mean(  f(:)),int8(max(  f(:))<0),max(  f(:)));
-    fprintf(1,'         min T    = %s%4.4f;   mean T    = %s%4.4f;   max T    = %s%4.4f;\n'  ,int8(min(  T(:))<0),min(  T(:)),int8(mean(  T(:))<0),mean(  T(:)),int8(max(  T(:))<0),max(  f(:)));
-    fprintf(1,'         min C    = %s%4.4f;   mean C    = %s%4.4f;   max C    = %s%4.4f;\n\n',int8(min(MAJ(:))<0),min(MAJ(:)),int8(mean(MAJ(:))<0),mean(MAJ(:)),int8(max(MAJ(:))<0),max(  f(:)));
+    fprintf(1,'         min T    = %s%4.4f;   mean T    = %s%4.4f;   max T    = %s%4.4f;\n'  ,int8(min(  T(:))<0),min(  T(:)),int8(mean(  T(:))<0),mean(  T(:)),int8(max(  T(:))<0),max(  T(:)));
+    fprintf(1,'         min C    = %s%4.4f;   mean C    = %s%4.4f;   max C    = %s%4.4f;\n\n',int8(min(MAJ(:))<0),min(MAJ(:)),int8(mean(MAJ(:))<0),mean(MAJ(:)),int8(max(MAJ(:))<0),max(MAJ(:)));
 
     fprintf(1,'         min K    = %s%4.4f;   mean K    = %s%4.4f;   max K    = %s%4.4f;\n'  ,int8(min(   K(:))<0),min(   K(:)),int8(mean(   K(:))<0),mean(   K(:)),int8(max(   K(:))<0),max(   K(:)));
     fprintf(1,'         min  eta = %s%4.4f;   mean  eta = %s%4.4f;   max  eta = %s%4.4f;\n'  ,int8(min( eta(:))<0),min( eta(:)),int8(mean( eta(:))<0),mean( eta(:)),int8(max( eta(:))<0),max( eta(:)));
