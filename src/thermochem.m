@@ -2,19 +2,133 @@
 
 if step > 0
     
+    % *****  THERMO-CHEMISTRY  ********************************************
+    
+    % update time step
+    Vel    = [U(:)+u(:);W(:)+w(:);fUf(:);fWf(:);fUs(:);fWs(:)];            % combine all velocity components
+%     Div_fV = diff(fUs(ic,:),1,2)./h + diff(fWs(:,ic),1,1)./h;            % phase advection/compaction
+    Div_fV = diff(fUs(ic,:),1,2)./h + diff(fWs(:,ic),1,1)./h...
+            -diff(fUf(ic,:),1,2)./h - diff(fWf(:,ic),1,1)./h;              % phase advection/compaction
+    Div_fV = Div_fV/2;
+        
+    PeTeff = PeT .* (1 - 0.9./(1+exp(-(f(ic,ic)-0.4).*16)));
+    PeCeff = PeC .* (1 - 0.9./(1+exp(-(f(ic,ic)-0.4).*16)));
+
+    dt     = CFL*min([ (h/2)^2*max(PeTeff(:)) , h/2/max(abs(Vel)), 0.005./max(abs(Div_fV(:)))]);   % physical time step
+    
+    % update temperature
+    advn_T = flxdiv(T,fUs,fWs,h,ADVN,'adv') + flxdiv(T,fUf,fWf,h,ADVN,'adv'); % advection
+        
+    cmpt_T = -1/St.*Div_fV;                                                % advection/compaction
+        
+    diff_T = (diff(T(:,ic),2,1)./h^2 + diff(T(ic,:),2,2)./h^2);            % diffusion
+    
+    RTin   = (Tin-T)./(5*dt) .* exp(-(L-Z)./(2*h));                        % base injection rate
+
+    RT(ic,ic) = - advn_T - cmpt_T + diff_T./PeTeff + RTin(ic,ic);           % total rate of change
+    
+    res_T = ((T + f/St)-(To + fo/St))./dt - (theta.*RT + (1-theta).*RTo);  % residual temperature evolution equation
+    
+    T     = T - res_T.*dt/2;                                               % update temperature solution
+    
+    if isotherm_topbot                                                     % apply boundary conditions
+        T([1 end],:) = To([1 end],:);
+    else
+        T([1 end],:) = T(ibz,:);
+    end
+    if isotherm_sides
+        T(:,[1 end]) = To(:,[1 end]);
+    else
+        T(:,[1 end]) = T(:,ibx);
+    end
+    res_T([1 end],:) = 0;                                                  
+    res_T(:,[1 end]) = 0;
+    
+    
+    % update major element composition
+    advn_MAJ = flxdiv(MAJs,fUs,fWs,h,ADVN,'adv') + flxdiv(MAJf,fUf,fWf,h,ADVN,'adv'); % advection
+        
+    cmpt_MAJ = (MAJs(ic,ic)-MAJf(ic,ic)).*Div_fV;                          % advection/compaction
+    
+    diff_MAJ = (diff(MAJ(:,ic),2,1)./h^2 + diff(MAJ(ic,:),2,2)./h^2);      % diffusion
+
+    RMAJin   = (MAJin-MAJ)./(5*dt) .* exp(-(L-Z)./(2*h));                  % base injection rate
+
+    RMAJ(ic,ic) = - advn_MAJ - cmpt_MAJ + diff_MAJ./PeCeff + RMAJin(ic,ic);    % total rate of change
+    
+    res_MAJ = (MAJ-MAJo)./dt - (theta.*RMAJ + (1-theta).*RMAJo);           % residual composition evolution equation
+    
+    MAJ     = MAJ - res_MAJ.*dt/2;                                         % update composition solution
+    MAJ     = max(1e-16,min(MAJf,MAJ));                                    % enforce min/max bounds
+        
+    MAJ([1 end],:) = MAJ(ibz,:);                                           % apply boundary conditions
+    MAJ(:,[1 end]) = MAJ(:,ibx);
+    res_MAJ([1 end],:) = 0;
+    res_MAJ(:,[1 end]) = 0;
+    
+    
     %*****  PHASE EQUILIBRIUM  ************************************************
     
     % update equilibrium
-    [fq,MAJsq,MAJfq]  =  equilibrium(T,MAJ,perT,perCs,perCf,PhDg);
-    RctR_f = min(Da,1/(2*dt)).*(fq-f);
+    [fq,MAJsq,MAJfq]  =  equilibrium(T,MAJ,Pt,perT,perCs,perCf,clap,PhDg);
     
+    af = 0.25;
+    
+    if diseq
+        
+        % update reaction rate
+        RctR_fi = min(Da,0.5/dt).*(fq-f);
+        for k  = 1:ceil(kappa)                                             % regularisation
+            kk = kappa/ceil(kappa);
+            RctR_fi(ic,ic) = RctR_fi(ic,ic) + kk.*(diff(RctR_fi(ic,:),2,2)+diff(RctR_fi(:,ic),2,1))./8;
+            RctR_fi([1 end],:) = RctR_fi(ibz,:);
+            RctR_fi(:,[1 end]) = RctR_fi(:,ibx);
+        end
+        RctR_f = af*RctR_fi + (1-af)*RctR_f;
+
+        % update disequilibrium melt fraction
+        fin   = (fin-f)./(5*dt) .* exp(-(L-Z)./(2*h));                     % base injection rate
+        
+        Rf(ic,ic) = + Div_fV + RctR_f(ic,ic) + RMAJin(ic,ic);              % total rate of change
+        
+        res_f = (f-fo)./dt - (theta.*Rf + (1-theta).*Rfo);                 % residual composition evolution equation
+        
+        f     = f - res_f.*dt/2;                                           % update composition solution
+        f     = max(1e-16,min(1-1e-16,f));                                 % enforce min/max bounds
+        
+        qind = f<=flim | fq<=flim | (1-f)<=flim | (1-fq)<=flim;
+        f(qind)      = fq(qind);                                           % apply equilibrium outside cutoff
+        
+        f([1 end],:) = f(ibz,:);                                           % apply boundary conditions
+        f(:,[1 end]) = f(:,ibx);
+        res_f([1 end],:) = 0;
+        res_f(:,[1 end]) = 0;
+    
+    else
+        
+        % update equilibrium melt fraction
+        f              =  af*fq + (1-af)*f;
+        
+        % update reaction rate
+        RctR_fi        =  0.*RctR_f;
+        RctR_fi(ic,ic) = (f(ic,ic)-fo(ic,ic))./dt - Div_fV;
+        for k  = 1:ceil(kappa)                                             % regularisation
+            kk = kappa/ceil(kappa);
+            RctR_fi(ic,ic) = RctR_fi(ic,ic) + kk.*(diff(RctR_fi(ic,:),2,2)+diff(RctR_fi(:,ic),2,1))./8;
+            RctR_fi([1 end],:) = RctR_fi(ibz,:);
+            RctR_fi(:,[1 end]) = RctR_fi(:,ibx);
+        end
+        RctR_f = af*RctR_fi + (1-af)*RctR_f;
+        
+    end
+
     % update phase major element composition
-    KMAJq = MAJsq./MAJfq;
-    MAJf = MAJ./(f + (1-f).*KMAJq);
-    MAJs = MAJ./(f./KMAJq + (1-f));
-    MAJf(f<=  flim) = MAJfq(f<=  flim);  MAJs(f<=  flim) = MAJ(f<=    flim);
-    MAJf(f>=1-flim) = MAJ  (f>=1-flim);  MAJs(f>=1-flim) = MAJsq(f>=1-flim);
-    
+    KMAJ = MAJsq./MAJfq;
+    MAJf = MAJ./(f + (1-f).*KMAJ);
+    MAJs = MAJ./(f./KMAJ + (1-f));
+    MAJs(f<=  flim) = MAJ(f<=  flim);  MAJs(f>=1-flim) = MAJsq(f>=1-flim);
+    MAJf(f>=1-flim) = MAJ(f>=1-flim);  MAJf(f<=  flim) = MAJfq(f<=  flim);
+        
     % update incompatible trace element phase compositions
     TRIf = TRI./(f + (1-f).*KTRI);
     TRIs = TRI./(f./KTRI + (1-f));
@@ -43,92 +157,27 @@ if step > 0
     DcyR_IR = IRP./DIRP.*log(2);
     
     % stable isotope transfer composition
-    ISR = double(RctR_f>=0).*ISS + double(RctR_f<0).*ISF;
-    
-    
-    % *****  THERMO-CHEMISTRY  ********************************************
-    
-    % update melt fraction
-    Div_fV = flxdiv(1-f,U+UBG,W+WBG,h,'FLXDIV','flx');                     % phase advection/compaction
-    
-    Vel    = [U(:)+UBG(:);W(:)+WBG(:);u(:);w(:);uf(:);wf(:)];              % combine all velocity components
-    dt     = CFL*min([h/2/max(abs(Vel)), 0.0025./max(abs(Div_fV(:)))]);    % physical time step
+    ISR = double(RctR_f>0).*ISS + double(RctR_f<=0).*ISF;
 
-    Lpl_f  = (diff(f(:,ic),2,1)./h^2 + diff(f(ic,:),2,2)./h^2);            % diffusion
-    
-    Rfin    = (fin-f)./(5*dt) .* exp(-(L-Z)./(5*h));                       % base injection rate
-    
-    Rf(ic,ic) =  Div_fV + RctR_f(ic,ic) + Rfin(ic,ic);                     % total rate of change
-    
-    res_f = (f-fo)./dt - (theta.*Rf + (1-theta).*Rfo);                     % residual phase evolution equation
-    
-    f     = f - res_f.*dt;                                                 % update phase fraction
-    
-    iq    = fq<=flim | fq>=(1-flim);
-    f(iq) = fq(iq);  res_f(iq) = 0;                                        % enforce equilibrium at low
-    
-
-    f([1 end],:) = f(ibz,:);                                               % apply boundary conditions
-    f(:,[1 end]) = f(:,ibx);
-    res_f([1 end],:) = 0;                                          
-    res_f(:,[1 end]) = 0;
-    
-    
-    % update temperature
-    V_GrdT = flxdiv(T,U+u+UBG,W+w+WBG,h,'FROMM','adv');                    % advection
-    
-    Lpl_T  = (diff(T(:,ic),2,1)./h^2 + diff(T(ic,:),2,2)./h^2);            % diffusion
-    
-    RTin    = (Tin-T)./(5*dt) .* exp(-(L-Z)./(5*h));                       % base injection rate
-
-    RT(ic,ic) = -V_GrdT + Lpl_T/PeT - RctR_f(ic,ic)/St + RTin(ic,ic);      % total rate of change
-    
-    res_T = (T-To)./dt - (theta.*RT + (1-theta).*RTo);                     % residual temperature evolution equation
-    
-    T     = T - res_T.*dt;                                                 % update temperature solution
-    
-    T([1 end],:) = To([1 end],:);                                          % apply boundary conditions
-    T(:,[1 end]) = T(:,ibx);
-    res_T([1 end],:) = 0;                                                  
-    res_T(:,[1 end]) = 0;
-    
-    
-    % update major element composition
-    Div_fMAJV = flxdiv((1-f).*MAJs,U +UBG,W +WBG,h,'FLXDIV','flx') ...
-              + flxdiv(   f .*MAJf,uf+UBG,wf+WBG,h,'FLXDIV','flx');        % advection/compaction
-    
-    Lpl_MAJ   = (diff(MAJ(:,ic),2,1)./h^2 + diff(MAJ(ic,:),2,2)./h^2);     % diffusion
-    
-    RMAJin    = (MAJin-MAJ)./(5*dt) .* exp(-(L-Z)./(5*h));                 % base injection rate
-
-    RMAJ(ic,ic) = -Div_fMAJV + Lpl_MAJ/PeC + RMAJin(ic,ic);                % total rate of change
-    
-    res_MAJ = (MAJ-MAJo)./dt - (theta.*RMAJ + (1-theta).*RMAJo);           % residual composition evolution equation
-    
-    MAJ     = MAJ - res_MAJ.*dt;                                           % update composition solution
-    
-    MAJ     = max(1e-16,min(1-1e-16,MAJ));                                 % enforce min/max bounds
-        
-    MAJ([1 end],:) = MAJ(ibz,:);                                           % apply boundary conditions
-    MAJ(:,[1 end]) = MAJ(:,ibx);
-    res_MAJ([1 end],:) = 0;
-    res_MAJ(:,[1 end]) = 0;
-    
     
     % *****  TRACE ELEMENTS  **********************************************
 
     % update incompatible trace element composition
-    Div_fTRIV = flxdiv((1-f).*TRIs,U +UBG,W +WBG,h,'FROMM','flx') ...
-              + flxdiv(   f .*TRIf,uf+UBG,wf+WBG,h,'FROMM','flx');         % advection/compaction
+    advn_TRI = flxdiv(TRIs,fUs,fWs,h,ADVN,'adv') + flxdiv(TRIf,fUf,fWf,h,ADVN,'adv'); % advection
+        
+    cmpt_TRI = (TRIs(ic,ic)-TRIf(ic,ic)).*Div_fV;                          % advection/compaction
     
-    Lpl_TRI   = (diff(TRI(:,ic),2,1)./h^2 + diff(TRI(ic,:),2,2)./h^2);     % diffusion
+    diff_TRI = (diff(TRI(:,ic),2,1)./h^2 + diff(TRI(ic,:),2,2)./h^2);      % diffusion
     
-    RTRI(ic,ic) = -Div_fTRIV + Lpl_TRI/PeC;                                % total rate of change
+    RTRIin   = (TRIin-TRI)./(5*dt) .* exp(-(L-Z)./(2*h));                  % base injection rate
+
+    RTRI(ic,ic) = - advn_TRI - cmpt_TRI + diff_TRI./PeCeff + RTRIin(ic,ic);    % total rate of change
     
     res_TRI = (TRI-TRIo)./dt - (theta.*RTRI + (1-theta).*RTRIo);           % residual composition evolution equation
     
-    TRI     = TRI - res_TRI.*dt;                                           % update composition solution
-    
+    TRI     = TRI - res_TRI.*dt/2;                                         % update composition solution
+    TRI     = max(1e-16,min(TRIf,TRI));                                    % enforce min/max bounds
+
     TRI([1 end],:) = TRI(ibz,:);                                           % apply boundary conditions
     TRI(:,[1 end]) = TRI(:,ibx);
     res_TRI([1 end],:) = 0;
@@ -136,17 +185,21 @@ if step > 0
     
     
     % update compatible trace element composition
-    Div_fTRCV = flxdiv((1-f).*TRCs,U +UBG,W +WBG,h,'FROMM','flx') ...
-              + flxdiv(   f .*TRCf,uf+UBG,wf+WBG,h,'FROMM','flx');         % advection/compaction
+    advn_TRC = flxdiv(TRCs,fUs,fWs,h,ADVN,'adv') + flxdiv(TRCf,fUf,fWf,h,ADVN,'adv'); % advection
+        
+    cmpt_TRC = (TRCs(ic,ic)-TRCf(ic,ic)).*Div_fV;                          % advection/compaction
     
-    Lpl_TRC   = (diff(TRC(:,ic),2,1)./h^2 + diff(TRC(ic,:),2,2)./h^2);     % diffusion
+    diff_TRC = (diff(TRC(:,ic),2,1)./h^2 + diff(TRC(ic,:),2,2)./h^2);      % diffusion
     
-    RTRC(ic,ic) = -Div_fTRCV + Lpl_TRC/PeC;                                % total rate of change
+    RTRCin   = (TRCin-TRC)./(5*dt) .* exp(-(L-Z)./(2*h));                  % base injection rate
+
+    RTRC(ic,ic) = - advn_TRC - cmpt_TRC + diff_TRC./PeCeff + RTRCin(ic,ic);    % total rate of change
     
     res_TRC = (TRC-TRCo)./dt - (theta.*RTRC + (1-theta).*RTRCo);           % residual composition evolution equation
     
-    TRC     = TRC - res_TRC.*dt;                                           % update composition solution
-    
+    TRC     = TRC - res_TRC.*dt/2;                                         % update composition solution
+    TRC     = max(1e-16,min(TRCs,TRC));                                    % enforce min/max bounds
+
     TRC([1 end],:) = TRC(ibz,:);                                           % apply boundary conditions
     TRC(:,[1 end]) = TRC(:,ibx);
     res_TRC([1 end],:) = 0;
@@ -156,17 +209,21 @@ if step > 0
     % *****  RADIOGENIC ISOTOPES  *****************************************
 
     % update incompatible trace element composition
-    Div_fIRPV = flxdiv((1-f).*IRPs,U +UBG,W +WBG,h,'FROMM','flx') ...
-              + flxdiv(   f .*IRPf,uf+UBG,wf+WBG,h,'FROMM','flx');         % advection/compaction
+    advn_IRP = flxdiv(IRPs,fUs,fWs,h,ADVN,'adv') + flxdiv(IRPf,fUf,fWf,h,ADVN,'adv'); % advection
+        
+    cmpt_IRP = (IRPs(ic,ic)-IRPf(ic,ic)).*Div_fV;                          % advection/compaction
     
-    Lpl_IRP   = (diff(IRP(:,ic),2,1)./h^2 + diff(IRP(ic,:),2,2)./h^2);     % diffusion
+    diff_IRP = (diff(IRP(:,ic),2,1)./h^2 + diff(IRP(ic,:),2,2)./h^2);      % diffusion
     
-    RIRP(ic,ic) = -Div_fIRPV + Lpl_IRP/PeC - DcyR_IR(ic,ic);               % total rate of change
+    RIRPin   = (IRPin.*exp(-time./DIRP.*log(2))-IRP)./(5*dt) .* exp(-(L-Z)./(2*h)); % base injection rate
+        
+    RIRP(ic,ic) = - advn_IRP - cmpt_IRP + diff_IRP./PeCeff - DcyR_IR(ic,ic) + RIRPin(ic,ic); % total rate of change;
     
     res_IRP = (IRP-IRPo)./dt - (theta.*RIRP + (1-theta).*RIRPo);           % residual composition evolution equation
     
-    IRP     = IRP - res_IRP.*dt;                                           % update composition solution
-    
+    IRP     = IRP - res_IRP.*dt/2;                                         % update composition solution
+    IRP     = max(1e-16,min(1e3,IRP));                                     % enforce min/max bounds
+
     IRP([1 end],:) = IRP(ibz,:);                                           % apply boundary conditions
     IRP(:,[1 end]) = IRP(:,ibx);
     res_IRP([1 end],:) = 0;
@@ -174,17 +231,21 @@ if step > 0
     
     
     % update compatible trace element composition
-    Div_fIRDV = flxdiv((1-f).*IRDs,U +UBG,W +WBG,h,'FROMM','flx') ...
-              + flxdiv(   f .*IRDf,uf+UBG,wf+WBG,h,'FROMM','flx');         % advection/compaction
+    advn_IRD = flxdiv(IRDs,fUs,fWs,h,ADVN,'adv') + flxdiv(IRDf,fUf,fWf,h,ADVN,'adv'); % advection
+        
+    cmpt_IRD = (IRDs(ic,ic)-IRDf(ic,ic)).*Div_fV;                          % advection/compaction
     
-    Lpl_IRD   = (diff(IRD(:,ic),2,1)./h^2 + diff(IRD(ic,:),2,2)./h^2);     % diffusion
+    diff_IRD = (diff(IRD(:,ic),2,1)./h^2 + diff(IRD(ic,:),2,2)./h^2);      % diffusion
     
-    RIRD(ic,ic) = -Div_fIRDV + Lpl_IRD/PeC + DcyR_IR(ic,ic);               % total rate of change
+    RIRDin   = (IRDin+IRPin.*(1-exp(-time./DIRP.*log(2)))-IRD)./(5*dt) .* exp(-(L-Z)./(2*h)); % base injection rate
+
+    RIRD(ic,ic) = - advn_IRD - cmpt_IRD + diff_IRD./PeCeff + DcyR_IR(ic,ic) + RIRDin(ic,ic); % total rate of change;
     
     res_IRD = (IRD-IRDo)./dt - (theta.*RIRD + (1-theta).*RIRDo);           % residual composition evolution equation
     
-    IRD     = IRD - res_IRD.*dt;                                           % update composition solution
-    
+    IRD     = IRD - res_IRD.*dt/2;                                         % update composition solution
+    IRD     = max(1e-16,min(1e3,IRD));                                     % enforce min/max bounds
+
     IRD([1 end],:) = IRD(ibz,:);                                           % apply boundary conditions
     IRD(:,[1 end]) = IRD(:,ibx);
     res_IRD([1 end],:) = 0;
@@ -194,18 +255,21 @@ if step > 0
     % *****  STABLE ISOTOPES  *********************************************
 
     % update solid stable isotope composition
-    V_GrdISS = flxdiv(ISS,U+UBG,W+WBG,h,'FROMM','adv');                    % advection/compaction
+    advn_ISS = flxdiv(ISS,U,W,h,ADVN,'adv');                               % advection/compaction
     
-    Lpl_ISS  = (diff(ISS(:,ic),2,1)./h^2 + diff(ISS(ic,:),2,2)./h^2);      % diffusion
+    diff_ISS = (diff(ISS(:,ic),2,1)./h^2 + diff(ISS(ic,:),2,2)./h^2);      % diffusion
     
     RctR_ISS = -(ISR-ISS).*RctR_f./max(flim,1-f);                          % reactive transfer rate
 
-    RISS(ic,ic) = -V_GrdISS + Lpl_ISS/PeC + RctR_ISS(ic,ic);               % total rate of change
+    RISSin   = (ISSin-ISS)./(5*dt) .* exp(-(L-Z)./(2*h));                  % base injection rate
+
+    RISS(ic,ic) = - advn_ISS + diff_ISS./PeCeff + RctR_ISS(ic,ic) + RISSin(ic,ic);  % total rate of change
     
     res_ISS = (ISS-ISSo)./dt - (theta.*RISS + (1-theta).*RISSo);           % residual composition evolution equation
     
-    ISS     = ISS - res_ISS.*dt;                                           % update composition solution
-    
+    ISS     = ISS - res_ISS.*dt/2;                                         % update composition solution
+    ISS     = max(min(ISSin(:)),min(max(ISSin(:)),ISS));                   % enforce min/max bounds
+
     ISS([1 end],:) = ISS(ibz,:);                                           % apply boundary conditions
     ISS(:,[1 end]) = ISS(:,ibx);    
     res_ISS([1 end],:) = 0;
@@ -213,18 +277,21 @@ if step > 0
     
     
     % update fluid stable isotope composition
-    V_GrdISF = flxdiv(ISF,uf+UBG,wf+WBG,h,'FROMM','adv');                  % advection/compaction
+    advn_ISF = flxdiv(ISF,Uf,Wf,h,ADVN,'adv');                             % advection/compaction
     
-    Lpl_ISF  = (diff(ISF(:,ic),2,1)./h^2 + diff(ISF(ic,:),2,2)./h^2);      % diffusion
+    diff_ISF = (diff(ISF(:,ic),2,1)./h^2 + diff(ISF(ic,:),2,2)./h^2);      % diffusion
     
     RctR_ISF = (ISR-ISF).*RctR_f./max(flim,f);                             % reactive transfer rate
     
-    RISF(ic,ic) = -V_GrdISF + Lpl_ISF/PeC + RctR_ISF(ic,ic);               % total rate of change
+    RISFin   = (ISFin-ISF)./(5*dt) .* exp(-(L-Z)./(2*h));                  % base injection rate
+
+    RISF(ic,ic) = - advn_ISF + diff_ISF./PeCeff + RctR_ISF(ic,ic) + RISFin(ic,ic); % total rate of change
     
     res_ISF = (ISF-ISFo)./dt - (theta.*RISF + (1-theta).*RISFo);           % residual composition evolution equation
     
-    ISF     = ISF - res_ISF.*dt;                                           % update composition solution
-    
+    ISF     = ISF - res_ISF.*dt/2;                                         % update composition solution
+    ISF     = max(min(ISFin(:)),min(max(ISFin(:)),ISF));                   % enforce min/max bounds
+
     ISF([1 end],:) = ISF(ibz,:);                                           % apply boundary conditions
     ISF(:,[1 end]) = ISF(:,ibx);    
     res_ISF([1 end],:) = 0;
@@ -235,21 +302,27 @@ if step > 0
     
     epsDMG   = max(1e-16,eps-tau./10.^etav);                               % failure damage rate
 
-    V_GrdDMG = flxdiv(DMG,U+UBG,W+WBG,h,'FROMM','adv');                    % damage advection
+    advn_DMG = flxdiv(DMG,U,W,h,ADVN,'adv');                               % damage advection
     
-    Lpl_DMG  = (diff(DMG(:,ic),2,1)./h^2 + diff(DMG(ic,:),2,2)./h^2);      % regularisation
+    diff_DMG = (diff(DMG(:,ic),2,1)./h^2 + diff(DMG(ic,:),2,2)./h^2);      % regularisation
         
-    RDMG(ic,ic) = -V_GrdDMG + Lpl_DMG/PeC ...
+    RDMG(ic,ic) = -advn_DMG + diff_DMG./PeCeff ...
                 + epsDMG(ic,ic) - RHEAL.*DMG(ic,ic);                       % total rate of change
     
     res_DMG = (DMG-DMGo)./dt - (theta.*RDMG + RDMGo);                      % residual damage evolution equation
         
-    DMG = DMG - res_DMG.*dt;                                               % update composition solution
-    DMG = max(1e-16,min(1-1e-16,DMG));
+    DMG = DMG - res_DMG.*dt/2;                                               % update composition solution
+    DMG = max(1e-16,DMG);                                                  % enforce min bound
     
     DMG([1 end],:) = DMG(ibz,:);                                           % apply boundary conditions
     DMG(:,[1 end]) = DMG(:,ibx);
     res_DMG([1 end],:) = 0;
     res_DMG(:,[1 end]) = 0;
+    
+else
+    
+    % update equilibrium
+    [fq,MAJsq,MAJfq]  =  equilibrium(T,MAJ,Pt,perT,perCs,perCf,clap,PhDg);
+    f                 = fq;
     
 end
