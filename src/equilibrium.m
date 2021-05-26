@@ -1,6 +1,8 @@
 % calculate phase equilibrium
 
-function [f,cs,cf]  =  equilibrium(T,C,perT,perCs,perCf,PhDg)
+function [f,cs,cf]  =  equilibrium(T,C,P,perT,perCs,perCf,clap,PhDg)
+
+T   = T - P*clap;
 
 cs1 = max(0,min(1,          perCs .*erfc((2+PhDg).*(T-perT)./(1-perT))));
 cs2 = max(0,min(1, perCs+(1-perCs).*erfc((2+PhDg).*(T     )./   perT) ));
@@ -16,6 +18,6 @@ cf = zeros(size(T));
 cf(T>=perT) = cf1(T>=perT);
 cf(T< perT) = cf2(T< perT);
 
-f = max(1e-16,min(1-1e-16,(C-cs) ./ (cf-cs))); 
+f = max(1e-16,min(1-1e-16, (C-cs) ./ (cf-cs) )); 
 
 end
