@@ -66,7 +66,7 @@ ax(5) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
 ax(6) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
 
 set(fh2, 'CurrentAxes', ax(1))
-imagesc(xc,zc,max(-6, K(ic,ic))); axis ij equal tight; box on; cb = colorbar;
+imagesc(xc,zc,max(-6, log10(K(ic,ic)))); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ Darcy coefficient $K$'],TX{:},FS{:}); set(gca,'XTickLabel',[]);
 text(0,0.9*L,['time ',num2str(time,4)],TX{:},FS{:},'HorizontalAlignment','center','VerticalAlignment','middle')
 set(fh2, 'CurrentAxes', ax(2))
@@ -76,10 +76,10 @@ set(fh2, 'CurrentAxes', ax(3))
 imagesc(xc,zc,log10(eps(ic,ic))); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ strain rate $\dot{\varepsilon}$'],TX{:},FS{:}); set(gca,'XTickLabel',[]); set(gca,'YTickLabel',[]);
 set(fh2, 'CurrentAxes', ax(4))
-imagesc(xc,zc,      eta(ic,ic) ); axis ij equal tight; box on; cb = colorbar;
+imagesc(xc,zc,log10( eta_vep(ic,ic))); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ shear viscosity $\eta$'],TX{:},FS{:});
 set(fh2, 'CurrentAxes', ax(5))
-imagesc(xc,zc,max(-6,log10(DMG(ic,ic)))); axis ij equal tight; box on; cb = colorbar;
+imagesc(xc,zc,log10(zeta_vep(ic,ic))); axis ij equal tight; box on; cb = colorbar;
 set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['log$_{10}$ plastic damage $\varepsilon_p$'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
 set(fh2, 'CurrentAxes', ax(6))
 imagesc(xc,zc,log10(tau(ic,ic))); axis ij equal tight; box on; cb = colorbar;
@@ -259,7 +259,7 @@ if save_op
     % clean workspace
     clear Wi Ui Pi dWi dUi dPi Rfo RTo RMAJo RTRIo RTRCo RIRPo RIRDo RISSo RISFo Div_tz Div_tx dtW dtU dtP yield_GM yield_MC
     clear ax cb fw axw axh avs ahs axl axr axt axb fh fw TX TL FS TS UN p0 Vel k kk pp CCs CCf TT
-    clear Div_fV V_GrdT Div_fMAJV Div_fTRIV DIV_fTRCV Div_fIRPV Div_fIRDV V_GrdISS V_GrdISF V_GrdDMG
+    clear V_GrdT Div_fMAJV Div_fTRIV DIV_fTRCV Div_fIRPV Div_fIRDV V_GrdISS V_GrdISF V_GrdDMG
     clear Lpl_f Lpl_T Lpl_MAJ Lpl_TRI Lpl_TRC Lpl_IRP Lpl_IRD Lpl_ISS Lpl_ISF Lpl_DMG
 
     name = ['../out/',runID,'/',runID,'_svp_',num2str(frame)];

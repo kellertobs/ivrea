@@ -73,12 +73,13 @@ end
 fprintf('\n\n*****  initial condition: T0 = %1.3f;  C0 = %1.3f;  f0 = %1.3f;\n\n',T0,MAJ0,f0);
 
 % initialise geochemical signature
-TRI  =  TRI0 .* (1 + TRI1.*dr + TRI2.*gs); TRIin = TRI;  % incompatible traces
-TRC  =  TRC0 .* (1 + TRC1.*dr + TRC2.*gs); TRCin = TRC;  % compatible traces
-IRP  =  IRP0 .* (1 + IRP1.*dr + IRP2.*gs); IRPin = IRP;  % radiogenic parent isotopes
-IRD  =  IRD0 .* (1 + IRD1.*dr + IRD2.*gs); IRDin = IRD;  % radiogenic daughter isotopes
-ISS  =  ISS0 .* (1 + ISS1.*dr + ISS2.*gs); ISSin = ISS;  % solid stable isotopes
-ISF  =  ISF0 .* (1 + ISF1.*dr + ISF2.*gs); ISFin = ISF;  % fluid stable isotopes
+TRI  =  TRI0 .* (1 + TRI1.*dr + TRI2.*gs); TRIin = TRI;  % incompatible trace
+TRC  =  TRC0 .* (1 + TRC1.*dr + TRC2.*gs); TRCin = TRC;  % compatible trace
+IRP  =  IRP0 .* (1 + IRP1.*dr + IRP2.*gs); IRPin = IRP;  % radiogenic parent isotope
+IRD  =  IRP.*DIRD./DIRP;                   IRDin = IRD;  % daughter isotope in decay equilibrium
+% IRD  =  IRD0 .* (1 + IRD1.*dr + IRD2.*gs); IRDin = IRD;  % radiogenic daughter isotope
+ISS  =  ISS0 .* (1 + ISS1.*dr + ISS2.*gs); ISSin = ISS;  % solid stable isotope
+ISF  =  ISF0 .* (1 + ISF1.*dr + ISF2.*gs); ISFin = ISF;  % fluid stable isotope
     
 % update phase major element composition
 KMAJ = MAJsq./MAJfq;
@@ -96,7 +97,7 @@ U  =  1.*UBG;  FU = 0.*U;
 P  =  0.*f;    FP = 0.*P;
 u  =  0.*U;    Fu = u;
 w  =  0.*W;    Fw = w;
-p  =  0.*P;    Fp = p;
+p  =  0.*P;    Fp = p;  po = p;
 S  = [W(:);U(:);w(:);u(:);P(:);p(:)];
 wf = W+w./max(flim,(f(im,:)+f(ip,:))./2);
 uf = U+u./max(flim,(f(:,im)+f(:,ip))./2);
@@ -115,23 +116,25 @@ RISS   =  0.*ISS;
 RISF   =  0.*ISF;
 RDMG   =  0.*DMG;
 ISR    =  ISS;
-ups    =  0.*P;  upss = 0.*P;  Div_fV = 0.*P;
+ups    =  0.*P;  upss = 0.*P;  Div_fV = 0.*P(ic,ic);
 eps0   =  max(1/L,abs(Pu) + abs(Si)) + 1e-16;  
-exx    =  0.*P - Pu;  ezz = 0.*P + Pu;  exz = zeros(N-1,N-1) - Si;  eps = 0.*P + (abs(Pu) + abs(Si));  
-txx    =  0.*exx;  tzz = 0.*ezz;  txz = 0.*exz;  tau = 0.*eps;
-eta    =  exp(Es*(1./T-1./T0) - lambda.*f) .* EMAJ.^MAJ; 
+exx    =  0.*P - Pu;  ezz = 0.*P + Pu;  exz = zeros(N-1,N-1) - Si;  eps = 0.*P + (abs(Pu) + abs(Si));
+epsVIS =  0.*eps;  epsELA = eps; epsDMG = 0.*eps;
+upsVIS =  0.*ups;  upsELA = ups; upsDMG = 0.*ups;
+txx    =  0.*exx;  tzz = 0.*ezz;  txz = 0.*exz;  tau = 0.*eps;  tauo = tau;
+eta    =  exp(Es*(1./T-1./T0_eta) - lambda.*(f-f0_eta)) .* EMAJ.^MAJ; 
 eta    =  (1./etamax + 1./eta).^-1 + etamin;
-eta    =  log10(eta);
 etay   =  eta;
-zeta   =  min(log10(1/flim),eta - log10(f.*(1-f).^0.5));
-K      =  max(log10((flim/f0)^3),log10((f/f0).^3 .* (1-f).^2 .* exp(-Ef*(1./T-1./T0))) + KDMG.*DMG);  % segregation coefficient
+zeta   =  min(1/flim,eta./(f.*(1-f).^0.5));
+K      =  max((flim/f0^3),(f/f0).^3 .* (1-f).^2 .* exp(-Ef*(1./T-1./T0)) .* KDMG.^DMG);  % segregation coefficient
 yieldt =  ones(size(P));
 rctr   =  ones(size(MAJ));
 
 % initialise timing parameters
+it     =  0;
 step   =  0;
 time   =  0;
-dt     =  1e-16;
+dt     =  1e-5;
 
 % print initial condition
 if ~restart; up2date; output; end
@@ -176,6 +179,9 @@ while time < tend && step < M
     ISSo = ISS;  RISSo = RISS;
     ISFo = ISF;  RISFo = RISF;
     DMGo = DMG;  RDMGo = RDMG;
+    txxo = txx; tzzo = tzz; txzo = txz;
+    tauo = tau; % - flxdiv(tau,U,W,h,ADVN,'adv').*dt;
+    po   = p;   % - flxdiv(p  ,U,W,h,ADVN,'adv').*dt;
     dto  = dt;
     
     % reset residual norms and iteration count
@@ -185,7 +191,7 @@ while time < tend && step < M
     
     % non-linear iteration loop
     startup = 2*double(step<=1) + double(step>1);
-    while resnorm/resnorm0 >= rtol/startup && resnorm >= atol && it < maxit*startup || it < minit
+    while resnorm/resnorm0 >= rtol/startup^2 && resnorm >= atol/startup && it < maxit*startup || it < minit
         
         % increment iteration count
         it = it+1;
@@ -216,9 +222,9 @@ while time < tend && step < M
     fprintf(1,'         min T    = %s%4.4f;   mean T    = %s%4.4f;   max T    = %s%4.4f;\n'  ,int8(min(  T(:))<0),min(  T(:)),int8(mean(  T(:))<0),mean(  T(:)),int8(max(  T(:))<0),max(  T(:)));
     fprintf(1,'         min C    = %s%4.4f;   mean C    = %s%4.4f;   max C    = %s%4.4f;\n\n',int8(min(MAJ(:))<0),min(MAJ(:)),int8(mean(MAJ(:))<0),mean(MAJ(:)),int8(max(MAJ(:))<0),max(MAJ(:)));
 
-    fprintf(1,'         min K    = %s%4.4f;   mean K    = %s%4.4f;   max K    = %s%4.4f;\n'  ,int8(min(   K(:))<0),min(   K(:)),int8(mean(   K(:))<0),mean(   K(:)),int8(max(   K(:))<0),max(   K(:)));
-    fprintf(1,'         min  eta = %s%4.4f;   mean  eta = %s%4.4f;   max  eta = %s%4.4f;\n'  ,int8(min( eta(:))<0),min( eta(:)),int8(mean( eta(:))<0),mean( eta(:)),int8(max( eta(:))<0),max( eta(:)));
-    fprintf(1,'         min zeta = %s%4.4f;   mean zeta = %s%4.4f;   max zeta = %s%4.4f;\n\n',int8(min(zeta(:))<0),min(zeta(:)),int8(mean(zeta(:))<0),mean(zeta(:)),int8(max(zeta(:))<0),max(zeta(:)));
+    fprintf(1,'         min K    = %s%4.4f;   mean K    = %s%4.4f;   max K    = %s%4.4f;\n'  ,int8(min(log10(   K(:)))<0),min(log10(   K(:))),int8(mean(log10(   K(:)))<0),mean(log10(   K(:))),int8(max(log10(   K(:)))<0),max(log10(   K(:))));
+    fprintf(1,'         min  eta = %s%4.4f;   mean  eta = %s%4.4f;   max  eta = %s%4.4f;\n'  ,int8(min(log10( eta(:)))<0),min(log10( eta(:))),int8(mean(log10( eta(:)))<0),mean(log10( eta(:))),int8(max(log10( eta(:)))<0),max(log10( eta(:))));
+    fprintf(1,'         min zeta = %s%4.4f;   mean zeta = %s%4.4f;   max zeta = %s%4.4f;\n\n',int8(min(log10(zeta(:)))<0),min(log10(zeta(:))),int8(mean(log10(zeta(:)))<0),mean(log10(zeta(:))),int8(max(log10(zeta(:)))<0),max(log10(zeta(:))));
     
     fprintf(1,'         min ups  = %s%4.4f;   mean ups  = %s%4.4f;   max ups  = %s%4.4f;\n'  ,int8(min(ups(:))<0),min(ups(:)),int8(mean(ups(:))<0),mean(ups(:)),int8(max(ups(:))<0),max(ups(:)));
     fprintf(1,'         min eps  = %s%4.4f;   mean eps  = %s%4.4f;   max eps  = %s%4.4f;\n'  ,int8(min(eps(:))<0),min(eps(:)),int8(mean(eps(:))<0),mean(eps(:)),int8(max(eps(:))<0),max(eps(:)));

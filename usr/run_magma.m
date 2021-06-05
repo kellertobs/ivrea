@@ -1,18 +1,18 @@
 clear; close all;                % #ok<*NASGU> 
 
 % set run parameters
-runID    = 'demo2';               % run identifier
+runID    = 'magma2';              % run identifier
 restart  =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nop      =  1;                   % output frame plotted/saved every 'nop' time steps
+nop      = 50;                   % output frame plotted/saved every 'nop' time steps
 plot_op  =  1;                   % switch on (1) to display results
-save_op  =  0;                   % switch on (1) to save output to file
+save_op  =  1;                   % switch on (1) to save output to file
 plot_cv  =  1;                   % switch on (1) to live plot iterative convergence
 bnchmrk  =  0;                   % switch on (1) to run manufactured solution benchmark
 diseq    =  0;                   % switch on (1) to use disequilibrium formulation, else local phase equilibrium imposed
 
 % set model domain parameters
-L        =  15;                  % domain dimension
-N        =  100 + 2;             % number of grid points in z-direction (incl. 2 ghosts)
+L        =  5;                  % domain dimension
+N        =  250 + 2;             % number of grid points in z-direction (incl. 2 ghosts)
 h        =  L/(N-2);             % grid spacing
 
 % set model timing parameters
@@ -20,52 +20,51 @@ M        =  1e5;                 % number of time steps to take
 tend     =  1e5;                 % end time for simulation [s]
 
 % stress control parameters
-Pu       =  -0.1/L;              % ratio of pure-shear stress to buoyancy pressure
+Pu       =  -0/L;                % ratio of pure-shear stress to buoyancy pressure
 Si       =  0;                   % ratio of simple-shear stress to buoyancy pressure
-Ty       =  1;                   % ratio of tensile strength to buoyancy pressure 
+Ty       =  1/1;                 % ratio of tensile strength to buoyancy pressure 
 
 % set model rheology parameters
-De       =  1e4;                 % visco-elastic Deborah number
 n        =  0.0;                 % non-Newtonian shear viscosity powerlaw
 lambda   =  30;                  % exponential melt weakening factor
 Es       =  5;                   % matrix viscosity activation energy
 Ef       =  0;                   % melt viscosity activation energy
-EMAJ     =  0.01;                % matrix viscosity dependence on major element composition
-RHEAL    =  2;                   % damage healing rate
+EMAJ     =  1;                   % matrix viscosity dependence on major element composition
+RHEAL    =  1;                   % damage healing rate
 KDMG     =  1;                   % damage permeability enhancement factor
 YDMG     =  0.05;                % damage yield stress reduction factor
 DMG0     =  0.05;                % initial random damage amplitude
-T0_eta   =  0.4;                 % rheology reference temperature
+T0_eta   =  0.50;                % rheology reference temperature
 f0_eta   =  0.0;                 % rheology reference melt fraction
-e0_eta   =  1;                   % rheology reference strain rate
-Pc       =  20;                  % crustal pressure (top boundary)
+e0_eta   =  10;                  % rheology reference strain rate
+Pc       =  40;                  % crustal pressure (top boundary)
 
 % thermo-chemical model parameters
-Tc       =  0.05;                % crustal temperature (top boundary)
-T0       =  0.47;                % initial temperature
+Tc       =  0.00;                % crustal temperature (top boundary)
+T0       =  0.001;               % initial temperature
 T1       =  0.0;                 % amplitude of random noise (rel)
-T2       =  0.005;               % amplitude of gaussian (abs)
+T2       =  0.70;                % amplitude of gaussian (abs)
 D        =  0.60*L;              % thermal boundary layer thickness
 PeT      =  2.0;                 % thermal Peclet number [u0.h0/kappaT0]
-PeC      =  100;                 % major element Peclet number [u0.h0/Dc0]
+PeC      =  200;                 % major element Peclet number [u0.h0/Dc0]
 St       =  2.4;                 % Stefan number [cp0.dT0/L0]
 isotherm_topbot = 1;             % isothermal top/bot boundaries, else insulating
-isotherm_sides  = 0;             % isothermal side    boundaries, else insulating
-MAJ0     =  0.15;                % initial major element composition
+isotherm_sides  = 1;             % isothermal side    boundaries, else insulating
+MAJ0     =  0.20;                % initial major element composition
 MAJ1     =  0.10;                % amplitude of random noise   
 MAJ2     = -0.00;                % amplitude of gaussian
-Da       =  100;                 % Dahmköhler number [t0/tr0]
+Da       =  500;                 % Dahmköhler number [t0/tr0]
 PhDg     =  5.0;                 % Phase diagram scaling factor (> 1)
 perCf    =  0.75;                % peritectic liquidus composition
 perCs    =  0.7;                 % peritectic solidus  composition
 perT     =  0.3;                 % peritectic temperature
-clap     =  7.5e-4;              % Clapeyron slope for P-dependence of melting T
+clap     =  7.e-4;               % Clapeyron slope for P-dependence of melting T
 smx      =  (N/50)^2;            % smoothness of initial random noise in x-direction
 smz      =  (N/50)^2;            % smoothness of initial random noise in z-direction
-wx       =  L/4;                 % horizontal half-width of gaussian
-wz       =  L/4;                 % vertical half-width of initial gaussian
+wx       =  L/3;                 % horizontal half-width of gaussian
+wz       =  L/3;                 % vertical half-width of initial gaussian
 xpos     =  0;                   % x-position of initial gaussian (0 = middle of domain)
-zpos     = -L/1;                 % z-position of initial gaussian (0 = middle of domain)
+zpos     = -L/2;                 % z-position of initial gaussian (0 = middle of domain)
 
 % trace element model parameters
 TRI0     =  1.0;                 % initial incompatible trace element composition
@@ -84,8 +83,8 @@ IRP2     =  1.0;                 % amplitude of gaussian
 IRD0     =  0.01;                % initial radiogenic daughter isotope composition
 IRD1     =  0.0;                 % amplitude of random noise   
 IRD2     =  1.0;                 % amplitude of gaussian
-DIRP     =  2.0;                 % parent isotope decay number (dimensionless half-life)
-DIRD     =  1.0;                 % daughter isotope decay number (dimensionless half-life)
+DIRP     =  1.0;                 % parent isotope decay number (dimensionless half-life)
+DIRD     =  0.5;                 % daughter isotope decay number (dimensionless half-life)
 KIRP     =  10.;                 % parent isotope partitioning coefficient
 KIRD     =  0.1;                 % daughter isotope partitioning coefficient
 
@@ -99,19 +98,19 @@ ISF2     =  1.0;                 % amplitude of gaussian
 
 % set numerical model parameters
 nup      =  50;                  % nonlinear coefficients, residual norms updated every 'nup' iterations
-CFL      =  0.50;                 % (physical) time stepping courant number (multiplies stable step) [0,1]
+CFL      =  1.0;                 % (physical) time stepping courant number (multiplies stable step) [0,1]
 ADVN     =  'FROMM';             % advection scheme: UPW2, UPW3, FROMM, FLXDIV
 theta    =  0.50;                % time-stepping scheme selector (1=BE, 1/2=CN, 0=FE)
-rtol     =  1e-3;                % outer its relative tolerance
+rtol     =  1e-6;                % outer its relative tolerance
 atol     =  1e-6;                % outer its absolute tolerance
 minit    =  5;                   % minimum solver iterations
 maxit    =  10;                  % maximum solver iterations
-alpha    =  0.50;
-gamma    =  0.975;               % iterative relaxation for rheology updates [0,1]
-delta    =  1e-3;                % numerical compressibility for P-diagonal stabilisation
-kappa    =  0.25;                % regularisation of eIIvp for failure [0,1]
-etamin   =  1e-3;                % minimum viscosity for regularisation
-etamax   =  1e+4;                % maximum viscosity for stability
+alpha    =  0.75; 
+gamma    =  0.25;                % iterative relaxation for rheology updates [0,1]
+delta    =  0.05;                % numerical compressibility for P-diagonal stabilisation
+kappa    =  1.00;                % regularisation of eIIvp for failure [0,1]
+etamin   =  1e-4;                % minimum viscosity for regularisation
+etamax   =  1e+2;                % maximum viscosity for stability
 flim     =  1e-4;                % limit melt fraction in coefficients for stability
 
 % create output directory
