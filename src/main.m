@@ -23,8 +23,8 @@ for i = 1:max(smx,smz)
               + smx./max(smx,smz).*diff(dr(ic,:),2,2)./8;
     dr = dr - mean(dr(:)); 
     dr = dr./max(abs(dr(:)));
-    dr([1 end],:) = 0;
-    dr(:,[1 end]) = 0;
+    dr([1 2 end-1 end],:) = 0;
+    dr(:,[1 2 end-1 end]) = 0;
 end
 
 % get mapping arrays
@@ -123,18 +123,18 @@ epsVIS =  0.*eps;  epsELA = eps; epsDMG = 0.*eps;
 upsVIS =  0.*ups;  upsELA = ups; upsDMG = 0.*ups;
 txx    =  0.*exx;  tzz = 0.*ezz;  txz = 0.*exz;  tau = 0.*eps;  tauo = tau;
 eta    =  exp(Es*(1./T-1./T0_eta) - lambda.*(f-f0_eta)) .* EMAJ.^MAJ; 
-eta    =  (1./etamax + 1./eta).^-1 + etamin;
-etay   =  eta;
-zeta   =  min(1/flim,eta./(f.*(1-f).^0.5));
+eta    =  (1./etamax + 1./eta).^-1 + etamin;  etay =  eta;
+zeta   =  min(1/flim,eta./(f.*(1-f).^0.5));  zetay = zeta;
 K      =  max((flim/f0^3),(f/f0).^3 .* (1-f).^2 .* exp(-Ef*(1./T-1./T0)) .* KDMG.^DMG);  % segregation coefficient
 yieldt =  ones(size(P));
 rctr   =  ones(size(MAJ));
+twophs = double(f>=flim);
 
 % initialise timing parameters
 it     =  0;
 step   =  0;
 time   =  0;
-dt     =  1e-5;
+dt     =  1e-6;
 
 % print initial condition
 if ~restart; up2date; output; end
@@ -196,11 +196,11 @@ while time < tend && step < M
         % increment iteration count
         it = it+1;
         
-        % update nonlinear coefficients & auxiliary fields
-        up2date;
-        
         % update thermo-chemical evolution
         thermochem; 
+        
+        % update nonlinear coefficients & auxiliary fields
+        up2date;
         
         % solve fluid-mechanics equations
         fluidmech;

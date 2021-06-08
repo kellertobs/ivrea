@@ -32,7 +32,7 @@ if step > 0
     
     res_T = ((T + f/St)-(To + fo/St))./dt - (theta.*RT + (1-theta).*RTo);  % residual temperature evolution equation
     
-    T     = T - res_T.*dt/2;                                               % update temperature solution
+    T     = T - res_T.*dt/4;                                               % update temperature solution
     
     if isotherm_topbot                                                     % apply boundary conditions
         T([1 end],:) = To([1 end],:);
@@ -62,7 +62,7 @@ if step > 0
     
     res_MAJ = (MAJ-MAJo)./dt - (theta.*RMAJ + (1-theta).*RMAJo);           % residual composition evolution equation
     
-    MAJ     = MAJ - res_MAJ.*dt/2;                                         % update composition solution
+    MAJ     = MAJ - res_MAJ.*dt/4;                                         % update composition solution
     MAJ     = max(1e-16,min(MAJf,MAJ));                                    % enforce min/max bounds
         
     MAJ([1 end],:) = MAJ(ibz,:);                                           % apply boundary conditions
@@ -95,7 +95,7 @@ if step > 0
         
         res_f = (f-fo)./dt - (theta.*Rf + (1-theta).*Rfo);                 % residual composition evolution equation
         
-        f     = f - res_f.*dt/2;                                           % update composition solution
+        f     = f - res_f.*dt/4;                                           % update composition solution
         f     = max(1e-16,min(1-1e-16,f));                                 % enforce min/max bounds
         
         qind = f<=flim | fq<=flim | (1-f)<=flim | (1-fq)<=flim;
@@ -180,7 +180,7 @@ if step > 0
     
     res_TRI = (TRI-TRIo)./dt - (theta.*RTRI + (1-theta).*RTRIo);           % residual composition evolution equation
     
-    TRI     = TRI - res_TRI.*dt/2;                                         % update composition solution
+    TRI     = TRI - res_TRI.*dt/4;                                         % update composition solution
     TRI     = max(1e-16,min(TRIf,TRI));                                    % enforce min/max bounds
 
     TRI([1 end],:) = TRI(ibz,:);                                           % apply boundary conditions
@@ -203,7 +203,7 @@ if step > 0
     
     res_TRC = (TRC-TRCo)./dt - (theta.*RTRC + (1-theta).*RTRCo);           % residual composition evolution equation
     
-    TRC     = TRC - res_TRC.*dt/2;                                         % update composition solution
+    TRC     = TRC - res_TRC.*dt/4;                                         % update composition solution
     TRC     = max(1e-16,min(TRCs,TRC));                                    % enforce min/max bounds
 
     TRC([1 end],:) = TRC(ibz,:);                                           % apply boundary conditions
@@ -228,7 +228,7 @@ if step > 0
     
     res_IRP = (IRP-IRPo)./dt - (theta.*RIRP + (1-theta).*RIRPo);           % residual composition evolution equation
     
-    IRP     = IRP - res_IRP.*dt/2;                                         % update composition solution
+    IRP     = IRP - res_IRP.*dt/4;                                         % update composition solution
     IRP     = max(1e-16,min(1e3,IRP));                                     % enforce min/max bounds
 
     IRP([1 end],:) = IRP(ibz,:);                                           % apply boundary conditions
@@ -251,7 +251,7 @@ if step > 0
     
     res_IRD = (IRD-IRDo)./dt - (theta.*RIRD + (1-theta).*RIRDo);           % residual composition evolution equation
     
-    IRD     = IRD - res_IRD.*dt/2;                                         % update composition solution
+    IRD     = IRD - res_IRD.*dt/4;                                         % update composition solution
     IRD     = max(1e-16,min(1e3,IRD));                                     % enforce min/max bounds
 
     IRD([1 end],:) = IRD(ibz,:);                                           % apply boundary conditions
@@ -276,7 +276,7 @@ if step > 0
     
     res_ISS = (ISS-ISSo)./dt - (theta.*RISS + (1-theta).*RISSo);           % residual composition evolution equation
     
-    ISS     = ISS - res_ISS.*dt/2;                                         % update composition solution
+    ISS     = ISS - res_ISS.*dt/4;                                         % update composition solution
     ISS     = max(min(ISSin(:)),min(max(ISSin(:)),ISS));                   % enforce min/max bounds
 
     ISS([1 end],:) = ISS(ibz,:);                                           % apply boundary conditions
@@ -299,7 +299,7 @@ if step > 0
     
     res_ISF = (ISF-ISFo)./dt - (theta.*RISF + (1-theta).*RISFo);           % residual composition evolution equation
     
-    ISF     = ISF - res_ISF.*dt/2;                                         % update composition solution
+    ISF     = ISF - res_ISF.*dt/4;                                         % update composition solution
     ISF     = max(min(ISFin(:)),min(max(ISFin(:)),ISF));                   % enforce min/max bounds
 
     ISF([1 end],:) = ISF(ibz,:);                                           % apply boundary conditions
@@ -319,7 +319,7 @@ if step > 0
     
     res_DMG = (DMG-DMGo)./dt - (theta.*RDMG + RDMGo);                      % residual damage evolution equation
         
-    DMG = DMG - res_DMG.*dt/2;                                               % update composition solution
+    DMG = DMG - res_DMG.*dt/4;                                               % update composition solution
     DMG = max(1e-16,DMG);                                                  % enforce min bound
     
     DMG([1 end],:) = DMG(ibz,:);                                           % apply boundary conditions

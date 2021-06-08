@@ -1,7 +1,4 @@
 
-% get residual norm
-resnorm = norm(F(:),2)/norm(R(:),2);
-        
 if it<=1 || resnorm>resnorm0; resnorm0 = resnorm + 1e-32; end  % reset reference residual
 
 % report iterations

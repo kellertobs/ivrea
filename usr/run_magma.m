@@ -1,9 +1,9 @@
 clear; close all;                % #ok<*NASGU> 
 
 % set run parameters
-runID    = 'magma2';              % run identifier
+runID    = 'magma3';              % run identifier
 restart  =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nop      = 50;                   % output frame plotted/saved every 'nop' time steps
+nop      = 20;                   % output frame plotted/saved every 'nop' time steps
 plot_op  =  1;                   % switch on (1) to display results
 save_op  =  1;                   % switch on (1) to save output to file
 plot_cv  =  1;                   % switch on (1) to live plot iterative convergence
@@ -11,8 +11,8 @@ bnchmrk  =  0;                   % switch on (1) to run manufactured solution be
 diseq    =  0;                   % switch on (1) to use disequilibrium formulation, else local phase equilibrium imposed
 
 % set model domain parameters
-L        =  5;                  % domain dimension
-N        =  250 + 2;             % number of grid points in z-direction (incl. 2 ghosts)
+L        =  5;                   % domain dimension
+N        =  200 + 2;             % number of grid points in z-direction (incl. 2 ghosts)
 h        =  L/(N-2);             % grid spacing
 
 % set model timing parameters
@@ -20,11 +20,12 @@ M        =  1e5;                 % number of time steps to take
 tend     =  1e5;                 % end time for simulation [s]
 
 % stress control parameters
-Pu       =  -0/L;                % ratio of pure-shear stress to buoyancy pressure
+Pu       =  0;                   % ratio of pure-shear stress to buoyancy pressure
 Si       =  0;                   % ratio of simple-shear stress to buoyancy pressure
-Ty       =  1/1;                 % ratio of tensile strength to buoyancy pressure 
+Ty       =  1;                   % ratio of tensile strength to buoyancy pressure 
 
 % set model rheology parameters
+De       =  1e4;                 % visco-elastic Deborah number
 n        =  0.0;                 % non-Newtonian shear viscosity powerlaw
 lambda   =  30;                  % exponential melt weakening factor
 Es       =  5;                   % matrix viscosity activation energy
@@ -105,11 +106,11 @@ rtol     =  1e-6;                % outer its relative tolerance
 atol     =  1e-6;                % outer its absolute tolerance
 minit    =  5;                   % minimum solver iterations
 maxit    =  10;                  % maximum solver iterations
-alpha    =  0.75; 
-gamma    =  0.25;                % iterative relaxation for rheology updates [0,1]
-delta    =  0.05;                % numerical compressibility for P-diagonal stabilisation
-kappa    =  1.00;                % regularisation of eIIvp for failure [0,1]
-etamin   =  1e-4;                % minimum viscosity for regularisation
+alpha    =  0.00; 
+gamma    =  0.00;                % iterative relaxation for rheology updates [0,1]
+delta    =  1e-4;                % numerical compressibility for P-diagonal stabilisation
+kappa    =  0.00;                % regularisation of eIIvp for failure [0,1]
+etamin   =  1e-5;                % minimum viscosity for regularisation
 etamax   =  1e+2;                % maximum viscosity for stability
 flim     =  1e-4;                % limit melt fraction in coefficients for stability
 

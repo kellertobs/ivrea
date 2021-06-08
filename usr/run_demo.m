@@ -3,16 +3,16 @@ clear; close all;                % #ok<*NASGU>
 % set run parameters
 runID    = 'demo2';               % run identifier
 restart  =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nop      =  1;                   % output frame plotted/saved every 'nop' time steps
+nop      =  10;                   % output frame plotted/saved every 'nop' time steps
 plot_op  =  1;                   % switch on (1) to display results
-save_op  =  0;                   % switch on (1) to save output to file
+save_op  =  1;                   % switch on (1) to save output to file
 plot_cv  =  1;                   % switch on (1) to live plot iterative convergence
 bnchmrk  =  0;                   % switch on (1) to run manufactured solution benchmark
 diseq    =  0;                   % switch on (1) to use disequilibrium formulation, else local phase equilibrium imposed
 
 % set model domain parameters
 L        =  15;                  % domain dimension
-N        =  100 + 2;             % number of grid points in z-direction (incl. 2 ghosts)
+N        =  300 + 2;             % number of grid points in z-direction (incl. 2 ghosts)
 h        =  L/(N-2);             % grid spacing
 
 % set model timing parameters
@@ -25,12 +25,12 @@ Si       =  0;                   % ratio of simple-shear stress to buoyancy pres
 Ty       =  1;                   % ratio of tensile strength to buoyancy pressure 
 
 % set model rheology parameters
-De       =  1e4;                 % visco-elastic Deborah number
-n        =  0.0;                 % non-Newtonian shear viscosity powerlaw
+De       =  5e3;                 % visco-elastic Deborah number
+n        =  0.6;                 % non-Newtonian shear viscosity powerlaw
 lambda   =  30;                  % exponential melt weakening factor
 Es       =  5;                   % matrix viscosity activation energy
 Ef       =  0;                   % melt viscosity activation energy
-EMAJ     =  0.01;                % matrix viscosity dependence on major element composition
+EMAJ     =  0.1;                 % matrix viscosity dependence on major element composition
 RHEAL    =  2;                   % damage healing rate
 KDMG     =  1;                   % damage permeability enhancement factor
 YDMG     =  0.05;                % damage yield stress reduction factor
@@ -99,18 +99,18 @@ ISF2     =  1.0;                 % amplitude of gaussian
 
 % set numerical model parameters
 nup      =  50;                  % nonlinear coefficients, residual norms updated every 'nup' iterations
-CFL      =  0.50;                 % (physical) time stepping courant number (multiplies stable step) [0,1]
+CFL      =  1.0;                 % (physical) time stepping courant number (multiplies stable step) [0,1]
 ADVN     =  'FROMM';             % advection scheme: UPW2, UPW3, FROMM, FLXDIV
 theta    =  0.50;                % time-stepping scheme selector (1=BE, 1/2=CN, 0=FE)
 rtol     =  1e-3;                % outer its relative tolerance
 atol     =  1e-6;                % outer its absolute tolerance
 minit    =  5;                   % minimum solver iterations
 maxit    =  10;                  % maximum solver iterations
-alpha    =  0.50;
-gamma    =  0.975;               % iterative relaxation for rheology updates [0,1]
-delta    =  1e-3;                % numerical compressibility for P-diagonal stabilisation
-kappa    =  0.25;                % regularisation of eIIvp for failure [0,1]
-etamin   =  1e-3;                % minimum viscosity for regularisation
+alpha    =  0.00;
+gamma    =  0.00;                % iterative relaxation for rheology updates [0,1]
+delta    =  1e-4;                % numerical compressibility for P-diagonal stabilisation
+kappa    =  0.00;                % regularisation of eIIvp for failure [0,1]
+etamin   =  1e-2;                % minimum viscosity for regularisation
 etamax   =  1e+4;                % maximum viscosity for stability
 flim     =  1e-4;                % limit melt fraction in coefficients for stability
 

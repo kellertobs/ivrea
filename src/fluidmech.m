@@ -38,7 +38,7 @@ IR = [IR; ii(:)]; RR = [RR; aa(:)];
 
 % internal points
 ii    = MapW(2:end-1,2:end-1);
-EtaC1 = eta_vepc(2:end-1,1:end-1); EtaC2 = eta_vepc(2:end-1,2:end  );
+EtaC1 = etac_vep(2:end-1,1:end-1); EtaC2 = etac_vep(2:end-1,2:end  );
 EtaP1 = eta_vep (2:end-2,2:end-1); EtaP2 = eta_vep (3:end-1,2:end-1);
 
 % coefficients multiplying z-velocities W
@@ -63,12 +63,15 @@ II = [II; ii(:)]; JJ = [JJ; jj4(:)];   AA = [AA; (1/2*EtaC2(:)-1/3*EtaP2(:))/h^2
 
 
 % z-RHS vector
-tr  = tauo./max(1e-16,tau);
-trc = (tr(im,im)+tr(ip,im)+tr(im,ip)+tr(ip,ip)).*0.25;  % interpolate to cell corners
+% tr  = tauo./max(1e-16,tau);
+% trc = (tr(im,im)+tr(ip,im)+tr(im,ip)+tr(ip,ip)).*0.25;  % interpolate to cell corners
 
-rr = - f0.*((f(2:end-2,2:end-1)+f(3:end-1,2:end-1))/2 - mean(f(:))) ...
-     + (chi_vep (3:end-1,2:end-1).*(tzzo(3:end-1,2:end-1)+tzz(3:end-1,2:end-1))/2 - chi_vep (2:end-2,2:end-1).*(tzzo(2:end-2,2:end-1)+tzz(2:end-2,2:end-1))/2)./h ...
-     + (chi_vepc(2:end-1,2:end  ).*(txzo(2:end-1,2:end  )+txz(2:end-1,2:end  ))/2 - chi_vepc(2:end-1,1:end-1).*(txzo(2:end-1,1:end-1)+txz(2:end-1,1:end-1))/2)./h;
+rr = - ((f(2:end-2,2:end-1)+f(3:end-1,2:end-1))/2 - mean(f(:))) ...
+     + (chi_vep (3:end-1,2:end-1).*tzzo(3:end-1,2:end-1) - chi_vep (2:end-2,2:end-1).*tzzo(2:end-2,2:end-1))./h ...
+     + (chic_vep(2:end-1,2:end  ).*txzo(2:end-1,2:end  ) - chic_vep(2:end-1,1:end-1).*txzo(2:end-1,1:end-1))./h;
+%      + (chi_vep (3:end-1,2:end-1).*(tzzo(3:end-1,2:end-1)+tzz(3:end-1,2:end-1))/2 - chi_vep (2:end-2,2:end-1).*(tzzo(2:end-2,2:end-1)+tzz(2:end-2,2:end-1))/2)./h ...
+%      + (chic_vep(2:end-1,2:end  ).*(txzo(2:end-1,2:end  )+txz(2:end-1,2:end  ))/2 - chic_vep(2:end-1,1:end-1).*(txzo(2:end-1,1:end-1)+txz(2:end-1,1:end-1))/2)./h;
+
 IR = [IR; ii(:)];  RR = [RR; rr(:)];
 
 
@@ -105,7 +108,7 @@ IR = [IR; ii(:)]; RR = [RR; aa(:)];
 
 % internal points
 ii    = MapU(2:end-1,2:end-1);
-EtaC1 = eta_vepc(1:end-1,2:end-1); EtaC2 = eta_vepc(2:end  ,2:end-1);
+EtaC1 = etac_vep(1:end-1,2:end-1); EtaC2 = etac_vep(2:end  ,2:end-1);
 EtaP1 = eta_vep (2:end-1,2:end-2); EtaP2 = eta_vep (2:end-1,3:end-1);
 
 % coefficients multiplying x-velocities U
@@ -130,8 +133,10 @@ II = [II; ii(:)]; JJ = [JJ; jj4(:)];   AA = [AA; (1/2*EtaC2(:)-1/3*EtaP2(:))/h^2
 
 
 % x-RHS vector
-rr = + (chi_vep (2:end-1,3:end-1).*(txxo(2:end-1,3:end-1)+txx(2:end-1,3:end-1))/2 - chi_vep (2:end-1,2:end-2).*(txxo(2:end-1,2:end-2)+txx(2:end-1,2:end-2))/2)./h ...
-     + (chi_vepc(2:end  ,2:end-1).*(txzo(2:end  ,2:end-1)+txz(2:end  ,2:end-1))/2 - chi_vepc(1:end-1,2:end-1).*(txzo(1:end-1,2:end-1)+txz(1:end-1,2:end-1))/2)./h;
+rr = + (chi_vep (2:end-1,3:end-1).*txxo(2:end-1,3:end-1) - chi_vep (2:end-1,2:end-2).*txxo(2:end-1,2:end-2))./h ...
+     + (chic_vep(2:end  ,2:end-1).*txzo(2:end  ,2:end-1) - chic_vep(1:end-1,2:end-1).*txzo(1:end-1,2:end-1))./h;
+% rr = + (chi_vep (2:end-1,3:end-1).*(txxo(2:end-1,3:end-1)+txx(2:end-1,3:end-1))/2 - chi_vep (2:end-1,2:end-2).*(txxo(2:end-1,2:end-2)+txx(2:end-1,2:end-2))/2)./h ...
+%      + (chic_vep(2:end  ,2:end-1).*(txzo(2:end  ,2:end-1)+txz(2:end  ,2:end-1))/2 - chic_vep(1:end-1,2:end-1).*(txzo(1:end-1,2:end-1)+txz(1:end-1,2:end-1))/2)./h;
 IR = [IR; ii(:)];  RR = [RR; rr(:)];
 
 
@@ -376,7 +381,7 @@ aa = 1./zeta_vep(2:end-1,2:end-1);
 II = [II; ii(:)]; JJ = [JJ; ii(:)];    AA = [AA; aa(:)];  % p on stencil centre
 
 % RHS
-rr = - xi_vep(2:end-1,2:end-1)./zeta_vep(2:end-1,2:end-1) .* po(2:end-1,2:end-1);
+rr = xi_vep(2:end-1,2:end-1)./zeta_vep(2:end-1,2:end-1) .* po(2:end-1,2:end-1);
 IR = [IR; ii(:)];
 RR = [RR; rr(:)];
 
@@ -408,11 +413,11 @@ twophsw = (twophs(1:end-1,:) + twophs(2:end,:))./2;
 twophsu = (twophs(:,1:end-1) + twophs(:,2:end))./2;
 twophsv = [twophsw(:);twophsu(:)];
 
-ind     =  find(twophsv(:)<=1/4) + NW+NU;
+ind     =  find(twophsv(:)<=1/2) + NW+NU;
 bc_ind  =  [bc_ind;ind];
 bc_val  =  [bc_val;zeros(size(bc_ind))];
 
-ind     =  find(twophs (:)<=1/4) + 2*NW+2*NU+NP;
+ind     =  find(twophs (:)<=1/2) + 2*NW+2*NU+NP;
 bc_ind  =  [bc_ind;ind];
 bc_val  =  [bc_val;zeros(size(bc_ind))];
 
@@ -453,7 +458,10 @@ FP  = full(reshape(F(MapP(:)+2*(NW+NU)), N   , N   ));     % dynamic pressure
 Fw  = full(reshape(F(MapW(:)+   NW+NU    ),(N-1), N   )); 	% z-velocity
 Fu  = full(reshape(F(MapU(:)+   NW+NU    ), N   ,(N-1))); 	% x-velocity
 Fp  = full(reshape(F(MapP(:)+2*(NW+NU)+NP), N   , N   )); 	% dynamic pressure
-    
+
+% get residual norm
+resnorm = norm(F(:),2)/norm(R(:),2);
+
 % report convergence
 report;
         
@@ -508,9 +516,9 @@ eps([1 end],:) = eps(ibz,:);                                               % per
 eps(:,[1 end]) = eps(:,ibx);
 
 % update stresses
-txx = eta_vep .* exx + chi_vep .* txx.*tr;                                              % x-normal stress
-tzz = eta_vep .* ezz + chi_vep .* tzz.*tr;                                              % z-normal stress
-txz = eta_vepc.* exz + chi_vepc.* txz.*trc;                                              % xz-shear stress
+txx = eta_vep .* exx + chi_vep .* txxo;                                    % x-normal stress
+tzz = eta_vep .* ezz + chi_vep .* tzzo;                                    % z-normal stress
+txz = etac_vep.* exz + chic_vep.* txzo;                                    % xz-shear stress
 
 tau(ic,ic) = (  (txx(ic,ic).^2 + tzz(ic,ic).^2 ...
            + 2.*(txz(1:end-1,1:end-1).^2 + txz(2:end,1:end-1).^2 + txz(1:end-1,2:end).^2 + txz(2:end,2:end).^2).*0.25)./2).^0.5 + 1e-16;
@@ -518,11 +526,11 @@ tau([1 end],:) = tau(ibz,:);                                               % per
 tau(:,[1 end]) = tau(:,ibx);
 
 % update strain rate components
-epsVIS = max(1e-16,tau./etav);
-epsELA = max(1e-16,tau-tauo)./(De*dt);
-epsDMG = max(1e-16,eps-epsVIS-epsELA);                               % failure damage rate
+epsVIS =  tau./etav;
+epsELA = (tau-tauo)./Gdt;
+epsDMG = max(1e-16,eps-epsVIS-epsELA);
 
-upsVIS = -p./zetav;
-upsELA = -(p-po)./(De*dt);
-upsDMG = max(1e-16,ups-upsVIS-upsELA);                               % failure damage rate    
+upsVIS = - p./zetav;
+upsELA = -(p-po)./Kdt;
+upsDMG = max(1e-16,ups-upsVIS-upsELA);
 
