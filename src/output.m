@@ -220,7 +220,7 @@ if plot_cv
         pp = linspace(-1,max(Pe(:)),1e3);
         
         plot(pp,eps0.*ones(size(pp)),'k',pp,min(Ty+pp,2*Ty+pp/2),'r',Pe(:),yieldt(:),'r.','LineWidth',2); axis equal tight; box on; hold on;
-        scatter(Pe(:),tau(:),20,(eta(:)),'filled'); colorbar; colormap(ocean);
+        scatter(Pe(:),tau(:),20,log10(eta(:)),'filled'); colorbar; colormap(ocean);
         
         set(gca,'TickLabelInterpreter','latex','FontSize',15)
         title('Failure Criterion','Interpreter','latex','FontSize',22)
