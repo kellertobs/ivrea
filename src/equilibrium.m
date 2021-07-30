@@ -1,8 +1,8 @@
 % calculate phase equilibrium
 
-function [f,cs,cf]  =  equilibrium(T,C,P,perT,perCs,perCf,clap,PhDg)
+function [f,cs,cf]  =  equilibrium(T,C,P,H2O,perT,perCs,perCf,clap,dTH2O,PhDg)
 
-T   = T - P*clap;
+T   = T - P*clap + dTH2O*H2O.^0.75;
 
 cs1 = max(0,min(1,          perCs .*erfc((2+PhDg).*(T-perT)./(1-perT))));
 cs2 = max(0,min(1, perCs+(1-perCs).*erfc((2+PhDg).*(T     )./   perT) ));
