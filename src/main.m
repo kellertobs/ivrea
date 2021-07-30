@@ -56,6 +56,14 @@ WBG = WP+WS;
 UBG = UP+US;     
 clear  WP WS UP US
 
+% initialise geochemical signature
+TRI  =  TRI0 .* (1 + TRI1.*dr + TRI2.*gs); TRIin = TRI;  TRIf = TRI/KTRI; % incompatible trace
+TRC  =  TRC0 .* (1 + TRC1.*dr + TRC2.*gs); TRCin = TRC;  % compatible trace
+IRP  =  IRP0 .* (1 + IRP1.*dr + IRP2.*gs); IRPin = IRP;  % radiogenic parent isotope
+IRD  =  IRP.*DIRD./DIRP;                   IRDin = IRD;  % daughter isotope in decay equilibrium
+ISS  =  ISS0 .* (1 + ISS1.*dr + ISS2.*gs); ISSin = ISS;  % solid stable isotope
+ISF  =  ISF0 .* (1 + ISF1.*dr + ISF2.*gs); ISFin = ISF;  % fluid stable isotope
+
 % initialise thermo-chemical solution and residual fields
 if bnchmrk
     mms;
@@ -63,23 +71,19 @@ if bnchmrk
     T   = T_mms;
     MAJ = C_mms;
 else
-    T   =  Tc-(T0-Tc).*erf((-Z)./D).*(1 + T1.*dr) + T2.*gs; Tin = T;       % temperature
+    T   =  Tc-(T0-Tc).*erf((-Z)./DLAB).*(1 + T1.*dr) + T2.*gs; Tin = T;       % temperature
     MAJ =  MAJ0 .* (1 + MAJ1.*dr) + MAJ2.*gs; MAJin = MAJ;                 % major elements
+    MAJ = MAJ + (MAJc-MAJ0) .* (1-erf(75*(Z-DMOHO)/L))/2;
+    f   =  0.*T;  fq = f+1;
     Pt  =  Pc + 5*Z;                                                       % lithostatic pressure
-    [fq,MAJsq,MAJfq] = equilibrium(T ,MAJ ,Pt,perT,perCs,perCf,clap,PhDg); % melt fraction at equilibrium 
-    f0  =  max(flim,mean(fq(fq(:)>flim)));
-    f   =  fq;  fin = fq;
+    while norm(fq-f,2)/N > 1e-12
+        [fq,MAJsq,MAJfq] = equilibrium(T,MAJ,Pt,TRIf,perT,perCs,perCf,clap,dTH2O,PhDg); % melt fraction at equilibrium
+        f    = 0.9*f    + 0.1*fq;
+        TRIf = 0.9*TRIf + 0.1*(TRI./(f + (1-f).*KTRI));
+    end
+    fin = fq;
 end
 fprintf('\n\n*****  initial condition: T0 = %1.3f;  C0 = %1.3f;  f0 = %1.3f;\n\n',T0,MAJ0,f0);
-
-% initialise geochemical signature
-TRI  =  TRI0 .* (1 + TRI1.*dr + TRI2.*gs); TRIin = TRI;  % incompatible trace
-TRC  =  TRC0 .* (1 + TRC1.*dr + TRC2.*gs); TRCin = TRC;  % compatible trace
-IRP  =  IRP0 .* (1 + IRP1.*dr + IRP2.*gs); IRPin = IRP;  % radiogenic parent isotope
-IRD  =  IRP.*DIRD./DIRP;                   IRDin = IRD;  % daughter isotope in decay equilibrium
-% IRD  =  IRD0 .* (1 + IRD1.*dr + IRD2.*gs); IRDin = IRD;  % radiogenic daughter isotope
-ISS  =  ISS0 .* (1 + ISS1.*dr + ISS2.*gs); ISSin = ISS;  % solid stable isotope
-ISF  =  ISF0 .* (1 + ISF1.*dr + ISF2.*gs); ISFin = ISF;  % fluid stable isotope
     
 % update phase major element composition
 KMAJ = MAJsq./MAJfq;
@@ -97,7 +101,7 @@ U  =  1.*UBG;  FU = 0.*U;
 P  =  0.*f;    FP = 0.*P;
 u  =  0.*U;    Fu = u;
 w  =  0.*W;    Fw = w;
-p  =  0.*P;    Fp = p;  po = p;
+p  =  0.*P;    Fp = p;  po = p;   Pe = Pt;
 S  = [W(:);U(:);w(:);u(:);P(:);p(:)];
 wf = W+w./max(flim,(f(im,:)+f(ip,:))./2);
 uf = U+u./max(flim,(f(:,im)+f(:,ip))./2);
@@ -116,25 +120,18 @@ RISS   =  0.*ISS;
 RISF   =  0.*ISF;
 RDMG   =  0.*DMG;
 ISR    =  ISS;
-ups    =  0.*P;  upss = 0.*P;  Div_fV = 0.*P(ic,ic);
+ups    =  0.*P;  upss   =  0.*P;  upsf = 0.*P;  Div_fV = 0.*P(ic,ic);
 eps0   =  max(1/L,abs(Pu) + abs(Si)) + 1e-16;  
 exx    =  0.*P - Pu;  ezz = 0.*P + Pu;  exz = zeros(N-1,N-1) - Si;  eps = 0.*P + (abs(Pu) + abs(Si));
 epsVIS =  0.*eps;  epsELA = eps; epsDMG = 0.*eps;
 upsVIS =  0.*ups;  upsELA = ups; upsDMG = 0.*ups;
 txx    =  0.*exx;  tzz = 0.*ezz;  txz = 0.*exz;  tau = 0.*eps;  tauo = tau;
-eta    =  exp(Es*(1./T-1./T0_eta) - lambda.*(f-f0_eta)) .* EMAJ.^MAJ; 
-eta    =  (1./etamax + 1./eta).^-1 + etamin;  etay =  eta;
-zeta   =  min(1/flim,eta./(f.*(1-f).^0.5));  zetay = zeta;
-K      =  max((flim/f0^3),(f/f0).^3 .* (1-f).^2 .* exp(-Ef*(1./T-1./T0)) .* KDMG.^DMG);  % segregation coefficient
-yieldt =  ones(size(P));
-rctr   =  ones(size(MAJ));
-twophs = double(f>=flim);
+chi_vep =  0.*eps;  xi_vep  = 0.*ups;
 
 % initialise timing parameters
 it     =  0;
 step   =  0;
 time   =  0;
-dt     =  1e-6;
 
 % print initial condition
 if ~restart; up2date; output; end
@@ -179,6 +176,8 @@ while time < tend && step < M
     ISSo = ISS;  RISSo = RISS;
     ISFo = ISF;  RISFo = RISF;
     DMGo = DMG;  RDMGo = RDMG;
+    Pto  = Pt;   TRIfo = TRIf;
+    Div_fVo = Div_fV;
     txxo = txx; tzzo = tzz; txzo = txz;
     tauo = tau; % - flxdiv(tau,U,W,h,ADVN,'adv').*dt;
     po   = p;   % - flxdiv(p  ,U,W,h,ADVN,'adv').*dt;
@@ -231,7 +230,7 @@ while time < tend && step < M
     fprintf(1,'         min tau  = %s%4.4f;   mean tau  = %s%4.4f;   max tau  = %s%4.4f;\n\n',int8(min(tau(:))<0),min(tau(:)),int8(mean(tau(:))<0),mean(tau(:)),int8(max(tau(:))<0),max(tau(:)));
 
     % update parameters and plot results
-    if ~mod(step,nop); up2date; output; end
+    output;
     
     % increment time step
     time = time+dt;
@@ -240,6 +239,6 @@ while time < tend && step < M
 end
 
 % plot results
-if ~isnan(resnorm); up2date; output; end
+if ~isnan(resnorm); output; end
 
 diary off
