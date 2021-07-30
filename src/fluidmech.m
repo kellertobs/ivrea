@@ -63,14 +63,9 @@ II = [II; ii(:)]; JJ = [JJ; jj4(:)];   AA = [AA; (1/2*EtaC2(:)-1/3*EtaP2(:))/h^2
 
 
 % z-RHS vector
-% tr  = tauo./max(1e-16,tau);
-% trc = (tr(im,im)+tr(ip,im)+tr(im,ip)+tr(ip,ip)).*0.25;  % interpolate to cell corners
-
 rr = - ((f(2:end-2,2:end-1)+f(3:end-1,2:end-1))/2 - mean(f(:))) ...
      + (chi_vep (3:end-1,2:end-1).*tzzo(3:end-1,2:end-1) - chi_vep (2:end-2,2:end-1).*tzzo(2:end-2,2:end-1))./h ...
      + (chic_vep(2:end-1,2:end  ).*txzo(2:end-1,2:end  ) - chic_vep(2:end-1,1:end-1).*txzo(2:end-1,1:end-1))./h;
-%      + (chi_vep (3:end-1,2:end-1).*(tzzo(3:end-1,2:end-1)+tzz(3:end-1,2:end-1))/2 - chi_vep (2:end-2,2:end-1).*(tzzo(2:end-2,2:end-1)+tzz(2:end-2,2:end-1))/2)./h ...
-%      + (chic_vep(2:end-1,2:end  ).*(txzo(2:end-1,2:end  )+txz(2:end-1,2:end  ))/2 - chic_vep(2:end-1,1:end-1).*(txzo(2:end-1,1:end-1)+txz(2:end-1,1:end-1))/2)./h;
 
 IR = [IR; ii(:)];  RR = [RR; rr(:)];
 
@@ -135,8 +130,7 @@ II = [II; ii(:)]; JJ = [JJ; jj4(:)];   AA = [AA; (1/2*EtaC2(:)-1/3*EtaP2(:))/h^2
 % x-RHS vector
 rr = + (chi_vep (2:end-1,3:end-1).*txxo(2:end-1,3:end-1) - chi_vep (2:end-1,2:end-2).*txxo(2:end-1,2:end-2))./h ...
      + (chic_vep(2:end  ,2:end-1).*txzo(2:end  ,2:end-1) - chic_vep(1:end-1,2:end-1).*txzo(1:end-1,2:end-1))./h;
-% rr = + (chi_vep (2:end-1,3:end-1).*(txxo(2:end-1,3:end-1)+txx(2:end-1,3:end-1))/2 - chi_vep (2:end-1,2:end-2).*(txxo(2:end-1,2:end-2)+txx(2:end-1,2:end-2))/2)./h ...
-%      + (chic_vep(2:end  ,2:end-1).*(txzo(2:end  ,2:end-1)+txz(2:end  ,2:end-1))/2 - chic_vep(1:end-1,2:end-1).*(txzo(1:end-1,2:end-1)+txz(1:end-1,2:end-1))/2)./h;
+ 
 IR = [IR; ii(:)];  RR = [RR; rr(:)];
 
 
@@ -328,9 +322,7 @@ IR = [IR; ii(:)]; RR = [RR; aa(:)];
 ii = MapP(2:end-1,2:end-1);
 
 % coefficients multiplying matrix pressure P
-% aa = (twophs(2:end-1,2:end-1).*delta/10 + (1-twophs(2:end-1,2:end-1)).*delta)./(etav(2:end-1,2:end-1));
 aa = delta./eta_vep(2:end-1,2:end-1);
-% aa = zeros(size(ii)) + delta;
 II = [II; ii(:)]; JJ = [JJ; ii(:)];    AA = [AA; aa(:)];  % P on stencil centre
 
 
@@ -413,17 +405,13 @@ twophsw = (twophs(1:end-1,:) + twophs(2:end,:))./2;
 twophsu = (twophs(:,1:end-1) + twophs(:,2:end))./2;
 twophsv = [twophsw(:);twophsu(:)];
 
-ind     =  find(twophsv(:)<=1/2) + NW+NU;
+ind     =  find(twophsv(:)<=0.0) + NW+NU;
 bc_ind  =  [bc_ind;ind];
 bc_val  =  [bc_val;zeros(size(bc_ind))];
 
-ind     =  find(twophs (:)<=1/2) + 2*NW+2*NU+NP;
+ind     =  find(twophs (:)<=0.0) + 2*NW+2*NU+NP;
 bc_ind  =  [bc_ind;ind];
 bc_val  =  [bc_val;zeros(size(bc_ind))];
-
-% ind     =  2*NW+2*NU+MapP(end-1,N/2);
-% bc_ind  =  [bc_ind;ind];
-% bc_val  =  [bc_val;zeros(size(bc_ind))];
 
 % assemble and sort all boundary indices and values
 [BC.ind,ind]    =  sort(bc_ind);
@@ -460,7 +448,9 @@ Fu  = full(reshape(F(MapU(:)+   NW+NU    ), N   ,(N-1))); 	% x-velocity
 Fp  = full(reshape(F(MapP(:)+2*(NW+NU)+NP), N   , N   )); 	% dynamic pressure
 
 % get residual norm
-resnorm = norm(F(:),2)/norm(R(:),2);
+cutoff = floor(0.01*length(R));
+[Fsort,isort] = sort(abs(F(BC.free)),'descend');
+resnorm = norm(Fsort(cutoff:end),2)/norm(R(isort(cutoff:end)),2);
 
 % report convergence
 report;
@@ -468,69 +458,95 @@ report;
 
 %% Solve linear system of equations for vx, vz, P
 % S(BC.free) = S(BC.free) - C*(A\F(BC.free));  % update solution
-S(BC.free) = C*(A\R);  % update solution
-S(BC.ind ) = BC.val;  % fill in boundary conditions
+S(BC.free) = C*(A\R);                                                      % update solution
+S(BC.ind ) = BC.val;                                                       % fill in boundary conditions
 
 % Read out solution
 % map solution vector to 2D arrays
-W  = full(reshape(S(MapW(:))          ,(N-1), N   ));              % matrix z-velocity
-U  = full(reshape(S(MapU(:))          , N   ,(N-1)));              % matrix x-velocity
-P  = full(reshape(S(MapP(:)+2*(NW+NU)), N   , N   ));              % matrix dynamic pressure
+W  = full(reshape(S(MapW(:))          ,(N-1), N   ));                      % matrix z-velocity
+U  = full(reshape(S(MapU(:))          , N   ,(N-1)));                      % matrix x-velocity
+P  = full(reshape(S(MapP(:)+2*(NW+NU)), N   , N   ));                      % matrix dynamic pressure
 
-w  = full(reshape(S(MapW(:)+   NW+NU    ),(N-1), N   ));           % segregation z-velocity
-u  = full(reshape(S(MapU(:)+   NW+NU    ), N   ,(N-1)));           % segregation x-velocity
-p  = full(reshape(S(MapP(:)+2*(NW+NU)+NP), N   , N   ));           % compaction pressure
+w  = full(reshape(S(MapW(:)+   NW+NU    ),(N-1), N   ));                   % segregation z-velocity
+u  = full(reshape(S(MapU(:)+   NW+NU    ), N   ,(N-1)));                   % segregation x-velocity
+p  = full(reshape(S(MapP(:)+2*(NW+NU)+NP), N   , N   ));                   % compaction pressure
 
 
 %% get auxiliary variables
-Wf  = W + w./max(flim,(f(im,:)+f(ip,:))./2);                       % pore fluid z-velocity
-Uf  = U + u./max(flim,(f(:,im)+f(:,ip))./2);                       % pore fluid x-velocity
-fWf = W.*(f(im,:)+f(ip,:))./2 + w;                                 % pore fluid z-velocity
-fUf = U.*(f(:,im)+f(:,ip))./2 + u;                                 % pore fluid x-velocity
-fWs = W.*(1-(f(im,:)+f(ip,:))./2);                                 % solid matrix z-velocity
-fUs = U.*(1-(f(:,im)+f(:,ip))./2);                                 % solid matrix x-velocity
-Pt  = Pc + P + p + 5*Z;                                            % total pressure
-
-% update velocity divergences
-ups(ic,ic) = diff(U(ic,:),1,2)./h + diff(W(:,ic),1,1)./h;          % matrix velocity divergence
-
-ups([1 end],:) = ups(ibz,:);                                       % apply boundary conditions
-ups(:,[1 end]) = ups(:,ibx);
-
-upss(ic,ic) = diff(u(ic,:),1,2)./h + diff(w(:,ic),1,1)./h;         % segregation velocity divergence
-upss([1 end],:) = upss(ibz,:);                                     % apply boundary conditions
-upss(:,[1 end]) = upss(:,ibx);
+Wf  = W + w./max(flim,(f(im,:)+f(ip,:))./2);                               % pore fluid z-velocity
+Uf  = U + u./max(flim,(f(:,im)+f(:,ip))./2);                               % pore fluid x-velocity
+fWf = W.*(f(im,:)+f(ip,:))./2 + w;                                         % pore fluid z-velocity
+fUf = U.*(f(:,im)+f(:,ip))./2 + u;                                         % pore fluid x-velocity
+fWs = W.*(1-(f(im,:)+f(ip,:))./2);                                         % solid matrix z-velocity
+fUs = U.*(1-(f(:,im)+f(:,ip))./2);                                         % solid matrix x-velocity
+Pt  = Pc + P + p + 5*Z;                                                    % total pressure
 
 % update strain rates
-exx(:,ic)        = diff(U,1,2)./h - ups(:,ic)./3 - 0.*Pu;             % x-normal strain rate
-exx([1 end],:)   = exx(ibz,:);                                     % apply boundary conditions
+exx(:,ic)        = diff(U,1,2)./h;                                         % x-normal strain rate
+exx([1 end],:)   = exx(ibz,:);                                             % apply boundary conditions
 exx(:,[1 end])   = exx(:,ibx);
-ezz(ic,:)        = diff(W,1,1)./h - ups(ic,:)./3 + 0.*Pu;             % z-normal strain rate
-ezz([1 end],:)   = ezz(ibz,:);                                     % apply boundary conditions
+ezz(ic,:)        = diff(W,1,1)./h;                                         % z-normal strain rate
+ezz([1 end],:)   = ezz(ibz,:);                                             % apply boundary conditions
 ezz(:,[1 end])   = ezz(:,ibx);
-exz              = 1/2.*(diff(U,1,1)./h+diff(W,1,2)./h) - 0.*Si;      % shear strain rate
+exz              = diff(U,1,1)./h;                                         % xz-shear strain rate
+ezx              = diff(W,1,2)./h;                                         % zx-shear strain rate
 
-eps(ic,ic) = (  (exx(ic,ic).^2 + ezz(ic,ic).^2 ...
-           + 2.*(exz(1:end-1,1:end-1).^2 + exz(2:end,1:end-1).^2 + exz(1:end-1,2:end).^2 + exz(2:end,2:end).^2).*0.25)./2).^0.5 + 1e-16;
+% update velocity divergences
+upss             = exx + ezz;                                               % matrix velocity divergence
+upss([1 end],:)  = upss(ibz,:);                                              % apply boundary conditions
+upss(:,[1 end])  = upss(:,ibx);
+
+upsf(ic,ic)     = diff(u(ic,:),1,2)./h + diff(w(:,ic),1,1)./h;             % segregation velocity divergence
+upsf([1 end],:) = upsf(ibz,:);                                             % apply boundary conditions
+upsf(:,[1 end]) = upsf(:,ibx);
+
+% update strain rates
+ups     = upss;
+exxdev  =  exx - ups /3;                                                   % x-normal strain rate
+ezzdev  =  ezz - ups /3;                                                   % z-normal strain rate
+exzdev  = (exz + ezx)/2;                                                   % shear strain rate
+
+eps(ic,ic) = (  (exxdev(ic,ic).^2 + ezzdev(ic,ic).^2 ...
+           + 2.*(exzdev(1:end-1,1:end-1).^2 + exzdev(2:end,1:end-1).^2 ...
+           +     exzdev(1:end-1,2:end  ).^2 + exzdev(2:end,2:end  ).^2).*0.25)./2).^0.5 + 1e-16;
 eps([1 end],:) = eps(ibz,:);                                               % periodic boundaries
 eps(:,[1 end]) = eps(:,ibx);
 
 % update stresses
-txx = eta_vep .* exx + chi_vep .* txxo;                                    % x-normal stress
-tzz = eta_vep .* ezz + chi_vep .* tzzo;                                    % z-normal stress
-txz = etac_vep.* exz + chic_vep.* txzo;                                    % xz-shear stress
+txx = eta_vep .* exxdev + chi_vep .* txxo;                                 % x-normal stress
+tzz = eta_vep .* ezzdev + chi_vep .* tzzo;                                 % z-normal stress
+txz = etac_vep.* exzdev + chic_vep.* txzo;                                 % xz-shear stress
 
 tau(ic,ic) = (  (txx(ic,ic).^2 + tzz(ic,ic).^2 ...
-           + 2.*(txz(1:end-1,1:end-1).^2 + txz(2:end,1:end-1).^2 + txz(1:end-1,2:end).^2 + txz(2:end,2:end).^2).*0.25)./2).^0.5 + 1e-16;
+           + 2.*(txz(1:end-1,1:end-1).^2 + txz(2:end,1:end-1).^2 ...
+           +     txz(1:end-1,2:end  ).^2 + txz(2:end,2:end  ).^2).*0.25)./2).^0.5 + 1e-16;
 tau([1 end],:) = tau(ibz,:);                                               % periodic boundaries
 tau(:,[1 end]) = tau(:,ibx);
 
-% update strain rate components
-epsVIS =  tau./etav;
-epsELA = (tau-tauo)./Gdt;
-epsDMG = max(1e-16,eps-epsVIS-epsELA);
+% update shear strain rate components
+ezzVIS =  tzz./etav;
+exxVIS =  txx./etav;
+exzVIS =  txz./etavc;
+epsVIS(ic,ic) = (  (exxVIS(ic,ic).^2 + ezzVIS(ic,ic).^2 ...
+              + 2.*(exzVIS(1:end-1,1:end-1).^2 + exzVIS(2:end,1:end-1).^2 ...
+              +     exzVIS(1:end-1,2:end  ).^2 + exzVIS(2:end,2:end  ).^2).*0.25)./2).^0.5 + 1e-16;
+       
+ezzELA = (tzz-tzzo)./Gdt;
+exxELA = (txx-txxo)./Gdt;
+exzELA = (txz-txzo)./Gdt;
+epsELA(ic,ic) = (  (exxELA(ic,ic).^2 + ezzELA(ic,ic).^2 ...
+              + 2.*(exzELA(1:end-1,1:end-1).^2 + exzELA(2:end,1:end-1).^2 ...
+              +     exzELA(1:end-1,2:end  ).^2 + exzELA(2:end,2:end  ).^2).*0.25)./2).^0.5 + 1e-16;
+       
+ezzDMG =  tzz./etay;
+exxDMG =  txx./etay;
+exzDMG =  txz./etayc;
+epsDMG(ic,ic) = (  (exxDMG(ic,ic).^2 + ezzDMG(ic,ic).^2 ...
+              + 2.*(exzDMG(1:end-1,1:end-1).^2 + exzDMG(2:end,1:end-1).^2 ...
+              +     exzDMG(1:end-1,2:end  ).^2 + exzDMG(2:end,2:end  ).^2).*0.25)./2).^0.5 + 1e-16;
 
+% update compaction strain rate components
 upsVIS = - p./zetav;
 upsELA = -(p-po)./Kdt;
-upsDMG = max(1e-16,ups-upsVIS-upsELA);
+upsDMG = - p./zetay;
 
